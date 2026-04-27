@@ -74,12 +74,15 @@ echo "y" | python -m robocasa.scripts.download_datasets \
   --tasks TurnOnStove PickPlaceCounterToCabinet OpenCabinet SearingMeat \
   --split pretrain
 
-# Download all 65 atomic tasks
-echo "y" | python -m robocasa.scripts.download_datasets --atomic --split pretrain
+# Download all tasks (atomic + composite, pretrain split)
+echo "y" | python -m robocasa.scripts.download_datasets --all --split pretrain
 
-# Download all 300 composite tasks (large — many GB)
-echo "y" | python -m robocasa.scripts.download_datasets --composite --split pretrain
+# Download all tasks (both pretrain and target splits)
+echo "y" | python -m robocasa.scripts.download_datasets --all --split pretrain target
 ```
+
+> **Note:** The script does not have `--atomic` or `--composite` flags. Use `--all` to download
+> everything, or `--tasks` to list specific task names.
 
 Each dataset downloads as a LeRobot-format archive containing:
 - `data/chunk-000/episode_XXXXXX.parquet` — state/action data
