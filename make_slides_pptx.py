@@ -410,6 +410,117 @@ tb(sl,
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 5a — Target Evaluation Tasks (overview)
+# ═══════════════════════════════════════════════════════════════════════════════
+sl = slide()
+top = slide_heading(sl, "Target Evaluation Tasks — Overview",
+                    subtitle="50 held-out tasks used for benchmarking across 3 splits · 10 unseen kitchen scenes")
+
+# summary boxes
+for i, (val, label, sub, col) in enumerate([
+    ("50",  "Total target tasks", "18 atomic + 32 composite", BLUE),
+    ("49",  "Pure manipulation",  "98% of target tasks",      GREEN),
+    ("1",   "Navigation task",    "NavigateKitchen (atomic)", ORANGE),
+    ("10",  "Held-out scenes",    "Disjoint from training",   PURPLE),
+]):
+    bx = Inches(0.5) + i * Inches(3.2)
+    rect(sl, bx, top, Inches(2.9), Inches(1.25), fill=LBLUE_F, line_color=LBLUE, line_pt=0.5)
+    tb(sl, val,   bx, top + Inches(0.05), Inches(2.9), Inches(0.55),
+       size=22, bold=True, color=col, align=PP_ALIGN.CENTER)
+    tb(sl, label, bx, top + Inches(0.6),  Inches(2.9), Inches(0.32),
+       size=11, bold=True, color=DGRAY, align=PP_ALIGN.CENTER)
+    tb(sl, sub,   bx, top + Inches(0.9),  Inches(2.9), Inches(0.28),
+       size=9, color=MGRAY, align=PP_ALIGN.CENTER)
+
+# three-column split table
+simple_table(sl,
+    ["Split", "Tasks", "Task type", "Horizon range", "Navigation"],
+    [
+        ["Atomic-seen",      "18", "Atomic",    "300–700 steps  (15–35 s)",    "1 task (NavigateKitchen)"],
+        ["Composite-seen",   "16", "Composite", "800–2,900 steps  (40–145 s)", "None"],
+        ["Composite-unseen", "16", "Composite", "800–2,900 steps  (40–135 s)", "None"],
+        ["Total",            ("50", BLUE), "—", "300–2,900 steps", ("1 / 50  (2%)", ORANGE)],
+    ],
+    Inches(0.5), top + Inches(1.45), Inches(12.3), Inches(1.7),
+    col_widths=[Inches(1.9), Inches(0.8), Inches(1.3), Inches(3.3), Inches(5.0)])
+
+tb(sl, "Atomic-seen vs. Composite-seen vs. Composite-unseen:",
+   Inches(0.5), top + Inches(3.35), Inches(12.3), Inches(0.3),
+   size=13, bold=True, color=DGRAY)
+bullet_tb(sl, [
+    "Atomic-seen:        18 atomic tasks the model was trained on — tests atomic skill retention",
+    "Composite-seen:     16 composite tasks the model was trained on — tests multi-step execution on held-out scenes",
+    "Composite-unseen:   16 composite tasks NEVER seen during training — tests compositional generalization",
+], Inches(0.5), top + Inches(3.7), Inches(12.3), Inches(1.5), size=12)
+
+rect(sl, Inches(0.5), top + Inches(5.35), Inches(12.3), Inches(0.62),
+     fill=RGBColor(0xFF, 0xF2, 0xCC), line_color=ORANGE, line_pt=0.75)
+tb(sl, "Composite-unseen is the hardest split: tasks are novel compositions of learned skills "
+   "evaluated in unseen kitchen scenes. Best model (GR00T N1.5) achieves only 4.4%.",
+   Inches(0.65), top + Inches(5.4), Inches(12.0), Inches(0.54), size=12, color=DGRAY)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 5b — Target Evaluation Tasks (full list)
+# ═══════════════════════════════════════════════════════════════════════════════
+sl = slide()
+top = slide_heading(sl, "Target Evaluation Tasks — Full List")
+
+atomic_seen = [
+    ("CloseBlenderLid","600"),("CloseFridge","600"),("CloseToasterOvenDoor","300"),
+    ("CoffeeSetupMug","400"),("NavigateKitchen","300"),("OpenCabinet","700"),
+    ("OpenDrawer","500"),("OpenStandMixerHead","300"),("PickPlaceCounterToCabinet","500"),
+    ("PickPlaceCounterToStove","400"),("PickPlaceDrawerToCounter","500"),
+    ("PickPlaceSinkToCounter","600"),("PickPlaceToasterToCounter","400"),
+    ("SlideDishwasherRack","300"),("TurnOffStove","500"),
+    ("TurnOnElectricKettle","300"),("TurnOnMicrowave","300"),("TurnOnSinkFaucet","400"),
+]
+composite_seen = [
+    ("DeliverStraw","1700"),("GetToastedBread","2000"),("KettleBoiling","1000"),
+    ("LoadDishwasher","1200"),("PackIdenticalLunches","2600"),("PreSoakPan","1600"),
+    ("PrepareCoffee","1200"),("RinseSinkBasin","900"),("ScrubCuttingBoard","800"),
+    ("SearingMeat","2900"),("SetUpCuttingStation","1600"),("StackBowlsCabinet","1400"),
+    ("SteamInMicrowave","1400"),("StirVegetables","1600"),("StoreLeftoversInBowl","1700"),
+    ("WashLettuce","1100"),
+]
+composite_unseen = [
+    ("ArrangeBreadBasket","2900"),("ArrangeTea","1500"),("BreadSelection","1300"),
+    ("CategorizeCondiments","1100"),("CuttingToolSelection","800"),("GarnishPancake","1800"),
+    ("GatherTableware","1500"),("HeatKebabSandwich","1800"),("MakeIceLemonade","2000"),
+    ("PanTransfer","1200"),("PortionHotDogs","1500"),("RecycleBottlesByType","1900"),
+    ("SeparateFreezerRack","1600"),("WaffleReheat","2700"),("WashFruitColander","2100"),
+    ("WeighIngredients","2000"),
+]
+
+col_w = Inches(4.05)
+col_gap = Inches(0.07)
+
+for col_i, (title, col_color, tasks) in enumerate([
+    ("Atomic-seen  (18 tasks)",       BLUE,   atomic_seen),
+    ("Composite-seen  (16 tasks)",    LBLUE,  composite_seen),
+    ("Composite-unseen  (16 tasks)",  ORANGE, composite_unseen),
+]):
+    cx = Inches(0.5) + col_i * (col_w + col_gap)
+    # header
+    rect(sl, cx, top, col_w, Inches(0.36), fill=col_color)
+    tb(sl, title, cx + Inches(0.08), top + Inches(0.04), col_w - Inches(0.1), Inches(0.3),
+       size=12, bold=True, color=WHITE)
+    # rows
+    row_h = Inches(0.34)
+    for row_i, (task, horizon) in enumerate(tasks):
+        ry = top + Inches(0.4) + row_i * row_h
+        fill = RGBColor(0xF2,0xF2,0xF2) if row_i % 2 == 0 else WHITE
+        rect(sl, cx, ry, col_w, row_h, fill=fill, line_color=LGRAY, line_pt=0.3)
+        nav_mark = "  ★NAV" if task == "NavigateKitchen" else ""
+        tb(sl, task + nav_mark,
+           cx + Inches(0.08), ry + Inches(0.05), Inches(2.9), Inches(0.26),
+           size=9.5, color=ORANGE if nav_mark else DGRAY, bold=bool(nav_mark))
+        tb(sl, f"{int(horizon)//20}s  ({horizon} steps)",
+           cx + Inches(3.0), ry + Inches(0.05), Inches(1.0), Inches(0.26),
+           size=8.5, color=MGRAY, align=PP_ALIGN.RIGHT)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SLIDE 5 — Task Durations
 # ═══════════════════════════════════════════════════════════════════════════════
 sl = slide()
