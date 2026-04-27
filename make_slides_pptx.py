@@ -527,43 +527,45 @@ sl = slide()
 top = slide_heading(sl, "Training & Evaluation Data",
                     subtitle="Dataset splits used for pretraining and held-out evaluation")
 
-# ── Training table ─────────────────────────────────────────────────────────────
+# ── Training (left column) ────────────────────────────────────────────────────
 tb(sl, "Training Data  (Pretrain Split)",
-   Inches(0.5), top, Inches(12.3), Inches(0.32),
+   Inches(0.5), top, Inches(6.1), Inches(0.32),
    size=13, bold=True, color=BLUE)
 simple_table(sl,
-    ["Source", "Split", "# Tasks", "Demos / Task", "Total Demos", "Total Hours"],
+    ["Source", "Tasks", "Episodes / Task", "Total Episodes"],
     [
-        ["Human teleoperation",  "Pretrain", "300", "~100",    "~30,000",  "482 hrs"],
-        ["MimicGen (synthetic)", "Pretrain", "60",  "~10,000", "~600,000", "1,615 hrs"],
-        [("Total", BLUE), "—", ("360", BLUE), "—", ("~630,000", BLUE), ("~2,097 hrs", BLUE)],
+        ["Human demos — atomic",    "65",        "~100",    "6,500"],
+        ["Human demos — composite", "252",       "~100",    "25,200"],
+        [("Human subtotal", MGRAY), ("317", MGRAY), "—",   ("~31,700", MGRAY)],
+        ["MimicGen (synthetic)",    "60 atomic", "~10,000", "~600,000"],
+        [("Grand total", BLUE),     "—",         "—",       ("~631,700", BLUE)],
     ],
-    Inches(0.5), top + Inches(0.38), Inches(12.3), Inches(1.55),
-    col_widths=[Inches(2.5), Inches(1.0), Inches(1.0), Inches(1.5), Inches(1.7), Inches(4.6)])
+    Inches(0.5), top + Inches(0.38), Inches(6.1), Inches(2.15),
+    col_widths=[Inches(2.55), Inches(1.0), Inches(1.3), Inches(1.25)])
 
-# ── Evaluation table ───────────────────────────────────────────────────────────
-tb(sl, "Evaluation Data  (Target Split — RoboCasa365, ICLR 2026)",
-   Inches(0.5), top + Inches(2.1), Inches(12.3), Inches(0.32),
+# ── Evaluation (right column) ─────────────────────────────────────────────────
+tb(sl, "Evaluation Data  (Target Split — RoboCasa365)",
+   Inches(6.8), top, Inches(6.0), Inches(0.32),
    size=13, bold=True, color=BLUE)
 simple_table(sl,
-    ["Source", "Split", "# Tasks", "Subset", "Demos / Task", "Total Demos"],
+    ["Subset", "Tasks", "Demos / Task", "Total Demos"],
     [
-        ["Human teleoperation", "Target", "18", "Atomic-seen",      "~500", "~9,000"],
-        ["Human teleoperation", "Target", "16", "Composite-seen",   "~500", "~8,000"],
-        ["Human teleoperation", "Target", "16", "Composite-unseen", "~500", "~8,000"],
-        [("Total", BLUE), "—", ("50", BLUE), "—", "~500", ("~25,000", BLUE)],
+        ["Atomic-seen",      "18", "~500", "~9,000"],
+        ["Composite-seen",   "16", "~500", "~8,000"],
+        ["Composite-unseen", "16", "~500", "~8,000"],
+        [("Total", BLUE), ("50", BLUE), "~500", ("~25,000", BLUE)],
     ],
-    Inches(0.5), top + Inches(2.48), Inches(12.3), Inches(1.85),
-    col_widths=[Inches(2.5), Inches(1.0), Inches(1.0), Inches(2.0), Inches(1.5), Inches(4.3)])
+    Inches(6.8), top + Inches(0.38), Inches(6.0), Inches(1.85),
+    col_widths=[Inches(2.3), Inches(0.8), Inches(1.3), Inches(1.6)])
 
 # ── note ───────────────────────────────────────────────────────────────────────
-rect(sl, Inches(0.5), top + Inches(4.5), Inches(12.3), Inches(0.75),
+rect(sl, Inches(0.5), top + Inches(2.78), Inches(12.3), Inches(0.72),
      fill=LBLUE_F, line_color=LBLUE, line_pt=0.75)
 tb(sl,
    "Note: The original RoboCasa (RSS 2024, arxiv:2406.02523) used 100 evaluation tasks. "
    "RoboCasa365 (ICLR 2026, arxiv:2603.04356) defines a new 50-task target split with "
    "held-out kitchen scenes and 500 demos/task for more rigorous evaluation.",
-   Inches(0.65), top + Inches(4.55), Inches(12.0), Inches(0.65),
+   Inches(0.65), top + Inches(2.83), Inches(12.0), Inches(0.62),
    size=11, color=DGRAY)
 
 
