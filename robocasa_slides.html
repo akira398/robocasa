@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RoboCasa365 Benchmark — Overview Slides</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/black.min.css">
+<style>
+  :root {
+    --rc-blue: #3B9EFF;
+    --rc-orange: #FF7A3B;
+    --rc-green: #3BFF8A;
+    --rc-purple: #B03BFF;
+    --rc-bg: #0d1117;
+    --rc-surface: #161b22;
+  }
+
+  .reveal { background: var(--rc-bg); font-family: 'Segoe UI', Arial, sans-serif; }
+  .reveal h1, .reveal h2, .reveal h3 { font-weight: 700; text-transform: none; letter-spacing: -0.02em; }
+  .reveal h1 { font-size: 2.2em; }
+  .reveal h2 { font-size: 1.6em; color: var(--rc-blue); border-bottom: 2px solid var(--rc-blue); padding-bottom: 8px; margin-bottom: 20px; }
+  .reveal h3 { font-size: 1.1em; color: var(--rc-orange); margin-bottom: 8px; }
+
+  .reveal section { text-align: left; }
+  .reveal .title-slide { text-align: center; }
+
+  /* Cards */
+  .card-grid { display: grid; gap: 14px; }
+  .card-grid-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .card {
+    background: var(--rc-surface);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.78em;
+  }
+  .card.blue  { border-left: 4px solid var(--rc-blue); }
+  .card.orange{ border-left: 4px solid var(--rc-orange); }
+  .card.green { border-left: 4px solid var(--rc-green); }
+  .card.purple{ border-left: 4px solid var(--rc-purple); }
+
+  /* Big stat */
+  .stat-big { font-size: 2.2em; font-weight: 800; color: var(--rc-blue); line-height: 1; }
+  .stat-label { font-size: 0.75em; color: #8b949e; margin-top: 2px; }
+
+  /* Stat row */
+  .stat-row { display: flex; gap: 20px; margin: 14px 0; }
+  .stat-item { text-align: center; flex: 1; background: var(--rc-surface); border-radius: 8px; padding: 12px 6px; }
+
+  /* Table */
+  .rc-table { width: 100%; border-collapse: collapse; font-size: 0.72em; }
+  .rc-table th { background: #21262d; color: var(--rc-blue); padding: 8px 10px; text-align: left; border-bottom: 1px solid #30363d; }
+  .rc-table td { padding: 6px 10px; border-bottom: 1px solid #21262d; color: #c9d1d9; }
+  .rc-table tr:hover td { background: #161b22; }
+  .rc-table .best { color: var(--rc-green); font-weight: 700; }
+
+  /* Badge */
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 8px; font-size: 0.65em; font-weight: 600; vertical-align: middle; margin: 1px; }
+  .badge-blue { background: #1f4880; color: #79b8ff; }
+  .badge-orange { background: #7a2d00; color: #ffb347; }
+  .badge-green { background: #0d4429; color: #56d364; }
+  .badge-purple { background: #3b1f80; color: #d2a8ff; }
+
+  /* Progress bar */
+  .bar-wrap { margin: 6px 0; display: flex; align-items: center; gap: 8px; font-size: 0.72em; }
+  .bar-label { width: 180px; flex-shrink: 0; color: #c9d1d9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-outer { flex: 1; background: #21262d; border-radius: 4px; height: 16px; }
+  .bar-inner { height: 100%; border-radius: 4px; }
+  .bar-val { width: 40px; text-align: right; color: #8b949e; }
+
+  /* Image grid */
+  .img-grid { display: grid; gap: 6px; }
+  .img-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .img-grid-5 { grid-template-columns: repeat(5, 1fr); }
+  .img-grid img { width: 100%; border-radius: 6px; object-fit: cover; aspect-ratio: 4/3; }
+  .img-caption { text-align: center; font-size: 0.55em; color: #8b949e; margin-top: 3px; }
+
+  /* Comparison table */
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 0.7em; }
+  .compare-table th { background: #21262d; color: var(--rc-blue); padding: 8px 12px; font-size: 0.85em; }
+  .compare-table td { padding: 7px 12px; border-bottom: 1px solid #21262d; text-align: center; }
+  .compare-table .highlight td { background: #1f3a5c; }
+  .tick { color: var(--rc-green); font-size: 1.1em; }
+  .cross { color: #f85149; font-size: 1.1em; }
+  .partial { color: var(--rc-orange); }
+
+  /* Timeline */
+  .timeline { display: flex; align-items: center; gap: 0; margin: 16px 0; }
+  .tl-step { flex: 1; text-align: center; }
+  .tl-dot { width: 24px; height: 24px; border-radius: 50%; margin: 0 auto 6px; }
+  .tl-arrow { font-size: 1.4em; color: #30363d; margin: 0 2px; margin-bottom: 22px; }
+  .tl-label { font-size: 0.6em; color: #c9d1d9; }
+
+  /* Highlight box */
+  .highlight-box { background: #1a3a5c; border: 1px solid var(--rc-blue); border-radius: 8px; padding: 12px 16px; margin: 10px 0; font-size: 0.8em; }
+  .highlight-box.orange { background: #3a1a00; border-color: var(--rc-orange); }
+  .highlight-box.green { background: #0a2a1a; border-color: var(--rc-green); }
+
+  /* Task category pills */
+  .cat-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cat-pill { background: var(--rc-surface); border: 1px solid #30363d; border-radius: 20px; padding: 4px 12px; font-size: 0.62em; color: #c9d1d9; }
+
+  /* Fragmented lists */
+  .reveal ul { margin: 0; padding-left: 1.2em; }
+  .reveal li { margin: 4px 0; font-size: 0.78em; line-height: 1.4; }
+  .reveal .small { font-size: 0.65em; color: #8b949e; }
+
+  /* Slide number */
+  .reveal .slide-number { background: transparent; color: #30363d; }
+
+  /* Two col layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; }
+
+  /* Emoji icon */
+  .icon { font-size: 1.4em; vertical-align: middle; }
+
+  .reveal .footnote { font-size: 0.5em; color: #484f58; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ─── SLIDE 1: TITLE ─── -->
+<section class="title-slide" data-background-color="#0d1117">
+  <div style="margin-bottom:20px">
+    <img src="docs/images/robocasa-banner.webp" style="width:90%;border-radius:12px;box-shadow:0 4px 24px #000a">
+  </div>
+  <h1 style="font-size:2em">RoboCasa365</h1>
+  <p style="font-size:0.9em;color:#8b949e">A Large-Scale Benchmark for Long-Horizon Robot Learning in Kitchen Environments</p>
+  <div class="stat-row" style="justify-content:center;max-width:600px;margin:18px auto 0">
+    <div class="stat-item"><div class="stat-big">365</div><div class="stat-label">Total Tasks</div></div>
+    <div class="stat-item"><div class="stat-big" style="color:var(--rc-orange)">2,200+</div><div class="stat-label">Hours of Data</div></div>
+    <div class="stat-item"><div class="stat-big" style="color:var(--rc-green)">2,500+</div><div class="stat-label">Kitchen Scenes</div></div>
+    <div class="stat-item"><div class="stat-big" style="color:var(--rc-purple)">ICLR 2026</div><div class="stat-label">Venue</div></div>
+  </div>
+  <p class="small" style="margin-top:16px">robocasa.ai &nbsp;·&nbsp; arxiv:2603.04356</p>
+</section>
+
+<!-- ─── SLIDE 2: WHAT IS ROBOCASA? ─── -->
+<section data-background-color="#0d1117">
+  <h2>What is RoboCasa365?</h2>
+  <div class="two-col">
+    <div>
+      <p style="font-size:0.82em;color:#c9d1d9;line-height:1.6">
+        RoboCasa365 is a simulation benchmark designed to train and evaluate <strong>generalist robot policies</strong> for everyday household tasks.
+        It focuses on a <strong>kitchen robot</strong> that must combine navigation, manipulation, and long-horizon planning.
+      </p>
+      <div class="highlight-box" style="margin-top:12px">
+        <strong>Core idea:</strong> scale robot learning by providing diverse, realistic, long-horizon kitchen tasks with rich demonstrations.
+      </div>
+      <div style="margin-top:14px;font-size:0.75em">
+        <div>📅 Original RoboCasa: RSS 2024</div>
+        <div>📅 RoboCasa365 v1.0: ICLR 2026</div>
+        <div>⚙️ Built on RoboSuite + MuJoCo</div>
+        <div>🤖 Franka Panda on mobile base</div>
+      </div>
+    </div>
+    <div>
+      <div class="img-grid img-grid-4" style="grid-template-columns:1fr 1fr">
+        <div>
+          <img src="docs/images/pretrain_scenes/layout15_style15.png">
+          <div class="img-caption">Pretrain scene A</div>
+        </div>
+        <div>
+          <img src="docs/images/pretrain_scenes/layout19_style13.png">
+          <div class="img-caption">Pretrain scene B</div>
+        </div>
+        <div>
+          <img src="docs/images/target_scenes/layout1_style1.png">
+          <div class="img-caption">Target scene A</div>
+        </div>
+        <div>
+          <img src="docs/images/target_scenes/layout5_style5.png">
+          <div class="img-caption">Target scene B</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 3: SCENE DIVERSITY ─── -->
+<section data-background-color="#0d1117">
+  <h2>Scene Diversity</h2>
+  <p style="font-size:0.75em;color:#8b949e;margin-bottom:14px">2,500+ unique kitchen configurations — combinations of <strong>layout</strong> × <strong>visual style</strong></p>
+  <div class="img-grid" style="grid-template-columns:repeat(6,1fr);gap:5px">
+    <div><img src="docs/images/pretrain_scenes/layout11_style27.png"><div class="img-caption">L11 S27</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout21_style58.png"><div class="img-caption">L21 S58</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout30_style25.png"><div class="img-caption">L30 S25</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout41_style48.png"><div class="img-caption">L41 S48</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout53_style45.png"><div class="img-caption">L53 S45</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout58_style59.png"><div class="img-caption">L58 S59</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout42_style51.png"><div class="img-caption">L42 S51</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout37_style17.png"><div class="img-caption">L37 S17</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout40_style33.png"><div class="img-caption">L40 S33</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout28_style29.png"><div class="img-caption">L28 S29</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout45_style52.png"><div class="img-caption">L45 S52</div></div>
+    <div><img src="docs/images/pretrain_scenes/layout43_style31.png"><div class="img-caption">L43 S31</div></div>
+  </div>
+  <div class="two-col" style="margin-top:12px;gap:16px">
+    <div class="card blue">
+      <strong>Pretrain split</strong> — 2,500 scenes<br>
+      <span class="small">Used for training; broad visual + layout diversity</span>
+    </div>
+    <div class="card orange">
+      <strong>Target split</strong> — 10 held-out scenes<br>
+      <span class="small">Used for evaluation; disjoint objects + layouts</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 4: TASK TAXONOMY ─── -->
+<section data-background-color="#0d1117">
+  <h2>Task Taxonomy: 365 Tasks</h2>
+  <div class="two-col">
+    <div>
+      <div class="card blue" style="margin-bottom:14px">
+        <h3>Atomic Tasks — 65</h3>
+        <p style="font-size:0.75em;margin:4px 0 8px">Single-skill, single-step tasks across 14 fixture types</p>
+        <div style="font-size:0.68em;color:#c9d1d9">
+          <div>• <strong>Navigation:</strong> NavigateKitchen</div>
+          <div>• <strong>Pick &amp; Place:</strong> 20 variants (counter↔fridge, sink, oven, microwave…)</div>
+          <div>• <strong>Door/Drawer:</strong> Open/Close for 6 appliance types</div>
+          <div>• <strong>Appliance control:</strong> Stove knobs, sink faucets, blender lid, toaster, coffee machine…</div>
+          <div style="margin-top:6px;color:var(--rc-blue)">~100 demos per task</div>
+        </div>
+      </div>
+      <div class="highlight-box orange" style="font-size:0.72em">
+        <strong>Key insight:</strong> atomic tasks are the building blocks that compose into long-horizon tasks.
+        A robot must master all atomic skills to succeed at composite tasks.
+      </div>
+    </div>
+    <div>
+      <div class="card orange">
+        <h3>Composite Tasks — 300</h3>
+        <p style="font-size:0.75em;margin:4px 0 8px">Multi-step long-horizon tasks spanning <strong>60 activity categories</strong></p>
+        <div style="font-size:0.68em;color:#c9d1d9">
+          <div>• Sequences of 2–10+ atomic actions</div>
+          <div>• Require planning &amp; sequential reasoning</div>
+          <div>• Example: <em>MakeBananaMilkshake</em> = open fridge → pick banana → place in blender → close lid → turn on blender…</div>
+          <div style="margin-top:6px;color:var(--rc-orange)">~100 demos per task (human + synthetic)</div>
+        </div>
+      </div>
+      <div class="stat-row" style="margin-top:10px">
+        <div class="stat-item"><div class="stat-big" style="font-size:1.6em">31,922</div><div class="stat-label">Composite demos</div></div>
+        <div class="stat-item"><div class="stat-big" style="font-size:1.6em;color:var(--rc-orange)">60</div><div class="stat-label">Activity categories</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 5: COMPOSITE CATEGORIES ─── -->
+<section data-background-color="#0d1117">
+  <h2>60 Composite Activity Categories</h2>
+  <div class="cat-grid" style="max-height:380px;overflow:hidden">
+    <span class="cat-pill badge-blue">Adding Ice to Beverages</span>
+    <span class="cat-pill badge-orange">Arranging Buffet</span>
+    <span class="cat-pill badge-green">Arranging Cabinets</span>
+    <span class="cat-pill badge-purple">Arranging Condiments</span>
+    <span class="cat-pill badge-blue">Baking</span>
+    <span class="cat-pill badge-orange">Boiling</span>
+    <span class="cat-pill badge-green">Brewing</span>
+    <span class="cat-pill badge-purple">Broiling Fish</span>
+    <span class="cat-pill badge-blue">Chopping Food</span>
+    <span class="cat-pill badge-orange">Chopping Vegetables</span>
+    <span class="cat-pill badge-green">Cleaning Appliances</span>
+    <span class="cat-pill badge-purple">Cleaning Sink</span>
+    <span class="cat-pill badge-blue">Clearing Table</span>
+    <span class="cat-pill badge-orange">Defrosting Food</span>
+    <span class="cat-pill badge-green">Filling Serving Dishes</span>
+    <span class="cat-pill badge-purple">Frying</span>
+    <span class="cat-pill badge-blue">Garnishing Dishes</span>
+    <span class="cat-pill badge-orange">Loading Dishwasher</span>
+    <span class="cat-pill badge-green">Loading Fridge</span>
+    <span class="cat-pill badge-purple">Making Juice</span>
+    <span class="cat-pill badge-blue">Making Salads</span>
+    <span class="cat-pill badge-orange">Making Smoothies</span>
+    <span class="cat-pill badge-green">Making Tea</span>
+    <span class="cat-pill badge-purple">Making Toast</span>
+    <span class="cat-pill badge-blue">Managing Freezer Space</span>
+    <span class="cat-pill badge-orange">Measuring Ingredients</span>
+    <span class="cat-pill badge-green">Meat Preparation</span>
+    <span class="cat-pill badge-purple">Microwaving Food</span>
+    <span class="cat-pill badge-blue">Mixing &amp; Blending</span>
+    <span class="cat-pill badge-orange">Mixing Ingredients</span>
+    <span class="cat-pill badge-green">Organizing Dishes &amp; Containers</span>
+    <span class="cat-pill badge-purple">Organizing Recycling</span>
+    <span class="cat-pill badge-blue">Organizing Utensils</span>
+    <span class="cat-pill badge-orange">Packing Lunches</span>
+    <span class="cat-pill badge-green">Plating Food</span>
+    <span class="cat-pill badge-purple">Portioning Meals</span>
+    <span class="cat-pill badge-blue">Preparing Hot Chocolate</span>
+    <span class="cat-pill badge-orange">Preparing Marinade</span>
+    <span class="cat-pill badge-green">Preparing Sandwiches</span>
+    <span class="cat-pill badge-purple">Reheating Food</span>
+    <span class="cat-pill badge-blue">Restocking Supplies</span>
+    <span class="cat-pill badge-orange">Sanitizing Cutting Board</span>
+    <span class="cat-pill badge-green">Sanitizing Surface</span>
+    <span class="cat-pill badge-purple">Sautéing Vegetables</span>
+    <span class="cat-pill badge-blue">Seasoning Food</span>
+    <span class="cat-pill badge-orange">Serving Beverages</span>
+    <span class="cat-pill badge-green">Serving Food</span>
+    <span class="cat-pill badge-purple">Setting the Table</span>
+    <span class="cat-pill badge-blue">Simmering Sauces</span>
+    <span class="cat-pill badge-orange">Slicing Meat</span>
+    <span class="cat-pill badge-green">Slow Cooking</span>
+    <span class="cat-pill badge-purple">Snack Preparation</span>
+    <span class="cat-pill badge-blue">Sorting Ingredients</span>
+    <span class="cat-pill badge-orange">Steaming Food</span>
+    <span class="cat-pill badge-green">Steaming Vegetables</span>
+    <span class="cat-pill badge-purple">Storing Leftovers</span>
+    <span class="cat-pill badge-blue">Tidying Cabinets &amp; Drawers</span>
+    <span class="cat-pill badge-orange">Toasting Bread</span>
+    <span class="cat-pill badge-green">Washing Dishes</span>
+    <span class="cat-pill badge-purple">Washing Fruits &amp; Vegetables</span>
+  </div>
+  <p class="footnote">Each category contains 4–6 distinct task variants (different object sets, orderings, goals), totaling 300 composite tasks.</p>
+</section>
+
+<!-- ─── SLIDE 6: TASK DURATIONS ─── -->
+<section data-background-color="#0d1117">
+  <h2>Task Durations — How Long Are They?</h2>
+  <div class="two-col">
+    <div>
+      <h3>Duration Distribution (304 composite tasks)</h3>
+      <div style="margin:10px 0">
+        <div class="bar-wrap">
+          <div class="bar-label">&lt;30s  (very short)</div>
+          <div class="bar-outer"><div class="bar-inner" style="width:21%;background:var(--rc-green)"></div></div>
+          <div class="bar-val">65</div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-label">30–60s  (short)</div>
+          <div class="bar-outer"><div class="bar-inner" style="width:46%;background:var(--rc-blue)"></div></div>
+          <div class="bar-val">141</div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-label">60–100s  (medium)</div>
+          <div class="bar-outer"><div class="bar-inner" style="width:27%;background:var(--rc-orange)"></div></div>
+          <div class="bar-val">81</div>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-label">&gt;100s  (long)</div>
+          <div class="bar-outer"><div class="bar-inner" style="width:6%;background:var(--rc-purple)"></div></div>
+          <div class="bar-val">17</div>
+        </div>
+      </div>
+      <div class="stat-row" style="margin-top:12px">
+        <div class="stat-item"><div class="stat-big" style="font-size:1.5em;color:var(--rc-green)">10s</div><div class="stat-label">Minimum</div></div>
+        <div class="stat-item"><div class="stat-big" style="font-size:1.5em">51.8s</div><div class="stat-label">Mean</div></div>
+        <div class="stat-item"><div class="stat-big" style="font-size:1.5em;color:var(--rc-orange)">46s</div><div class="stat-label">Median</div></div>
+        <div class="stat-item"><div class="stat-big" style="font-size:1.5em;color:var(--rc-purple)">166s</div><div class="stat-label">Maximum</div></div>
+      </div>
+    </div>
+    <div>
+      <h3>Top 10 Longest Tasks</h3>
+      <div>
+        <div class="bar-wrap"><div class="bar-label">DivideBuffetTrays</div><div class="bar-outer"><div class="bar-inner" style="width:100%;background:var(--rc-purple)"></div></div><div class="bar-val">166s</div></div>
+        <div class="bar-wrap"><div class="bar-label">RecycleSodaCans</div><div class="bar-outer"><div class="bar-inner" style="width:88%;background:var(--rc-purple)"></div></div><div class="bar-val">146s</div></div>
+        <div class="bar-wrap"><div class="bar-label">PrepareDrinkStation</div><div class="bar-outer"><div class="bar-inner" style="width:81%;background:var(--rc-orange)"></div></div><div class="bar-val">135s</div></div>
+        <div class="bar-wrap"><div class="bar-label">SetBowlsForSoup</div><div class="bar-outer"><div class="bar-inner" style="width:81%;background:var(--rc-orange)"></div></div><div class="bar-val">135s</div></div>
+        <div class="bar-wrap"><div class="bar-label">PrepareCocktailStation</div><div class="bar-outer"><div class="bar-inner" style="width:79%;background:var(--rc-orange)"></div></div><div class="bar-val">131s</div></div>
+        <div class="bar-wrap"><div class="bar-label">ArrangeUtensilsByType</div><div class="bar-outer"><div class="bar-inner" style="width:76%;background:var(--rc-blue)"></div></div><div class="bar-val">126s</div></div>
+        <div class="bar-wrap"><div class="bar-label">ClearSink</div><div class="bar-outer"><div class="bar-inner" style="width:75%;background:var(--rc-blue)"></div></div><div class="bar-val">125s</div></div>
+        <div class="bar-wrap"><div class="bar-label">PackFoodByTemp</div><div class="bar-outer"><div class="bar-inner" style="width:74%;background:var(--rc-blue)"></div></div><div class="bar-val">123s</div></div>
+        <div class="bar-wrap"><div class="bar-label">ReturnWashingSupplies</div><div class="bar-outer"><div class="bar-inner" style="width:72%;background:var(--rc-blue)"></div></div><div class="bar-val">119s</div></div>
+        <div class="bar-wrap"><div class="bar-label">ArrangeTea</div><div class="bar-outer"><div class="bar-inner" style="width:70%;background:var(--rc-blue)"></div></div><div class="bar-val">116s</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 7: TASK EXAMPLES ─── -->
+<section data-background-color="#0d1117">
+  <h2>Task Examples Across Categories</h2>
+  <div class="card-grid card-grid-3" style="font-size:0.78em">
+    <div class="card blue">
+      <h3>🥤 Food Prep</h3>
+      <div class="bar-wrap"><div class="bar-label">MakeBananaMilkshake</div><div class="bar-outer"><div class="bar-inner" style="width:46%;background:var(--rc-blue)"></div></div><div class="bar-val">76s</div></div>
+      <div class="bar-wrap"><div class="bar-label">MakeFruitBowl</div><div class="bar-outer"><div class="bar-inner" style="width:45%;background:var(--rc-blue)"></div></div><div class="bar-val">75s</div></div>
+      <div class="bar-wrap"><div class="bar-label">BlendMarinade</div><div class="bar-outer"><div class="bar-inner" style="width:44%;background:var(--rc-blue)"></div></div><div class="bar-val">73s</div></div>
+      <div class="bar-wrap"><div class="bar-label">PrepareSmoothie</div><div class="bar-outer"><div class="bar-inner" style="width:25%;background:var(--rc-blue)"></div></div><div class="bar-val">42s</div></div>
+      <div class="bar-wrap"><div class="bar-label">PJSandwichPrep</div><div class="bar-outer"><div class="bar-inner" style="width:28%;background:var(--rc-blue)"></div></div><div class="bar-val">47s</div></div>
+    </div>
+    <div class="card orange">
+      <h3>🍳 Cooking</h3>
+      <div class="bar-wrap"><div class="bar-label">SearingMeat</div><div class="bar-outer"><div class="bar-inner" style="width:48%;background:var(--rc-orange)"></div></div><div class="bar-val">79s</div></div>
+      <div class="bar-wrap"><div class="bar-label">SetupFrying</div><div class="bar-outer"><div class="bar-inner" style="width:47%;background:var(--rc-orange)"></div></div><div class="bar-val">78s</div></div>
+      <div class="bar-wrap"><div class="bar-label">SimmeringSauce</div><div class="bar-outer"><div class="bar-inner" style="width:40%;background:var(--rc-orange)"></div></div><div class="bar-val">66s</div></div>
+      <div class="bar-wrap"><div class="bar-label">AdjustHeat</div><div class="bar-outer"><div class="bar-inner" style="width:30%;background:var(--rc-orange)"></div></div><div class="bar-val">49s</div></div>
+      <div class="bar-wrap"><div class="bar-label">BoilCorn</div><div class="bar-outer"><div class="bar-inner" style="width:24%;background:var(--rc-orange)"></div></div><div class="bar-val">40s</div></div>
+    </div>
+    <div class="card green">
+      <h3>🧽 Cleaning</h3>
+      <div class="bar-wrap"><div class="bar-label">ClearSink</div><div class="bar-outer"><div class="bar-inner" style="width:75%;background:var(--rc-green)"></div></div><div class="bar-val">125s</div></div>
+      <div class="bar-wrap"><div class="bar-label">CleanBoard</div><div class="bar-outer"><div class="bar-inner" style="width:69%;background:var(--rc-green)"></div></div><div class="bar-val">115s</div></div>
+      <div class="bar-wrap"><div class="bar-label">RinseBowls</div><div class="bar-outer"><div class="bar-inner" style="width:42%;background:var(--rc-green)"></div></div><div class="bar-val">70s</div></div>
+      <div class="bar-wrap"><div class="bar-label">WashFruitColander</div><div class="bar-outer"><div class="bar-inner" style="width:36%;background:var(--rc-green)"></div></div><div class="bar-val">60s</div></div>
+      <div class="bar-wrap"><div class="bar-label">ScrubCuttingBoard</div><div class="bar-outer"><div class="bar-inner" style="width:13%;background:var(--rc-green)"></div></div><div class="bar-val">22s</div></div>
+    </div>
+    <div class="card purple">
+      <h3>📦 Organization</h3>
+      <div class="bar-wrap"><div class="bar-label">DivideBuffetTrays</div><div class="bar-outer"><div class="bar-inner" style="width:100%;background:var(--rc-purple)"></div></div><div class="bar-val">166s</div></div>
+      <div class="bar-wrap"><div class="bar-label">RecycleSodaCans</div><div class="bar-outer"><div class="bar-inner" style="width:88%;background:var(--rc-purple)"></div></div><div class="bar-val">146s</div></div>
+      <div class="bar-wrap"><div class="bar-label">ArrangeUtensilsByType</div><div class="bar-outer"><div class="bar-inner" style="width:76%;background:var(--rc-purple)"></div></div><div class="bar-val">126s</div></div>
+      <div class="bar-wrap"><div class="bar-label">BeverageSorting</div><div class="bar-outer"><div class="bar-inner" style="width:61%;background:var(--rc-purple)"></div></div><div class="bar-val">102s</div></div>
+      <div class="bar-wrap"><div class="bar-label">PackFoodByTemp</div><div class="bar-outer"><div class="bar-inner" style="width:74%;background:var(--rc-purple)"></div></div><div class="bar-val">123s</div></div>
+    </div>
+    <div class="card blue">
+      <h3>🍽️ Serving / Setup</h3>
+      <div class="bar-wrap"><div class="bar-label">PrepareDrinkStation</div><div class="bar-outer"><div class="bar-inner" style="width:81%;background:var(--rc-blue)"></div></div><div class="bar-val">135s</div></div>
+      <div class="bar-wrap"><div class="bar-label">SetBowlsForSoup</div><div class="bar-outer"><div class="bar-inner" style="width:81%;background:var(--rc-blue)"></div></div><div class="bar-val">135s</div></div>
+      <div class="bar-wrap"><div class="bar-label">PlateStoreDinner</div><div class="bar-outer"><div class="bar-inner" style="width:57%;background:var(--rc-blue)"></div></div><div class="bar-val">95s</div></div>
+      <div class="bar-wrap"><div class="bar-label">TongBuffetSetup</div><div class="bar-outer"><div class="bar-inner" style="width:35%;background:var(--rc-blue)"></div></div><div class="bar-val">58s</div></div>
+      <div class="bar-wrap"><div class="bar-label">ServeMealJuice</div><div class="bar-outer"><div class="bar-inner" style="width:29%;background:var(--rc-blue)"></div></div><div class="bar-val">48s</div></div>
+    </div>
+    <div class="card orange">
+      <h3>❄️ Fridge / Freezer</h3>
+      <div class="bar-wrap"><div class="bar-label">MicrowaveThawing</div><div class="bar-outer"><div class="bar-inner" style="width:52%;background:var(--rc-orange)"></div></div><div class="bar-val">87s</div></div>
+      <div class="bar-wrap"><div class="bar-label">ClearFreezer</div><div class="bar-outer"><div class="bar-inner" style="width:49%;background:var(--rc-orange)"></div></div><div class="bar-val">82s</div></div>
+      <div class="bar-wrap"><div class="bar-label">FillKettle</div><div class="bar-outer"><div class="bar-inner" style="width:48%;background:var(--rc-orange)"></div></div><div class="bar-val">79s</div></div>
+      <div class="bar-wrap"><div class="bar-label">FreezeBottledWaters</div><div class="bar-outer"><div class="bar-inner" style="width:54%;background:var(--rc-orange)"></div></div><div class="bar-val">90s</div></div>
+      <div class="bar-wrap"><div class="bar-label">LoadFridgeByType</div><div class="bar-outer"><div class="bar-inner" style="width:19%;background:var(--rc-orange)"></div></div><div class="bar-val">32s</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 8: NAVIGATION ─── -->
+<section data-background-color="#0d1117">
+  <h2>Navigation: Yes — Mobile Manipulation</h2>
+  <div class="two-col">
+    <div>
+      <div class="highlight-box" style="margin-bottom:14px">
+        <strong>RoboCasa features a Franka Panda arm mounted on a mobile base.</strong>
+        The robot can navigate between kitchen fixtures, making this a full <em>mobile manipulation</em> benchmark.
+      </div>
+      <div class="card blue" style="margin-bottom:10px">
+        <h3>NavigateKitchen (atomic task)</h3>
+        <p style="font-size:0.72em;margin:4px 0">Dedicated task for moving between kitchen locations (counter, fridge, sink, stove, microwave, etc.)</p>
+      </div>
+      <div class="card orange">
+        <h3>Navigation embedded in composite tasks</h3>
+        <ul style="font-size:0.72em">
+          <li>Robot starts near one fixture, must navigate to another to pick up/place objects</li>
+          <li>Multi-fixture tasks (e.g., fridge → counter → stove → sink) require 3–5 navigations per episode</li>
+          <li>Kitchen layouts vary across 2,500+ scenes — no fixed path memorization</li>
+        </ul>
+      </div>
+      <div class="highlight-box green" style="margin-top:10px;font-size:0.72em">
+        Navigation + manipulation = full household robot paradigm, unlike tabletop-only benchmarks.
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom:10px">14 Fixture Types (navigation targets)</h3>
+      <div class="card-grid card-grid-2" style="gap:6px;font-size:0.68em">
+        <div class="card" style="padding:8px 10px">🚪 Cabinets (upper/lower)</div>
+        <div class="card" style="padding:8px 10px">❄️ Refrigerator + Freezer</div>
+        <div class="card" style="padding:8px 10px">🔥 Stove / Oven</div>
+        <div class="card" style="padding:8px 10px">💧 Sink</div>
+        <div class="card" style="padding:8px 10px">📦 Drawers</div>
+        <div class="card" style="padding:8px 10px">☕ Coffee Machine</div>
+        <div class="card" style="padding:8px 10px">🌊 Microwave</div>
+        <div class="card" style="padding:8px 10px">🍞 Toaster / Toaster Oven</div>
+        <div class="card" style="padding:8px 10px">🥤 Blender</div>
+        <div class="card" style="padding:8px 10px">🫙 Stand Mixer</div>
+        <div class="card" style="padding:8px 10px">♨️ Electric Kettle</div>
+        <div class="card" style="padding:8px 10px">🍽️ Dishwasher</div>
+        <div class="card" style="padding:8px 10px">🧑‍🍳 Counter Workspace</div>
+        <div class="card" style="padding:8px 10px">🧂 Pantry / Shelves</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 9: PURE MANIPULATION ─── -->
+<section data-background-color="#0d1117">
+  <h2>Pure Manipulation Tasks — Extensive Coverage</h2>
+  <div class="two-col">
+    <div>
+      <p style="font-size:0.8em;color:#c9d1d9">All 65 atomic tasks are <strong>pure manipulation</strong> (no locomotion required). Many composite tasks are predominantly manipulation-heavy.</p>
+
+      <h3 style="margin-top:14px">Manipulation skill types</h3>
+      <div class="card-grid" style="gap:8px;margin-top:8px">
+        <div class="card blue" style="padding:8px 12px;font-size:0.72em">
+          <strong>Grasping &amp; Placing</strong> — 20 pick-place variants across all fixtures
+        </div>
+        <div class="card orange" style="padding:8px 12px;font-size:0.72em">
+          <strong>Fine manipulation</strong> — turn stove knobs, open/close lids, adjust temperature dial
+        </div>
+        <div class="card green" style="padding:8px 12px;font-size:0.72em">
+          <strong>Articulated object control</strong> — fridge door, microwave door, oven rack, dishwasher door
+        </div>
+        <div class="card purple" style="padding:8px 12px;font-size:0.72em">
+          <strong>Multi-object coordination</strong> — stacking, filling, arranging, sorting
+        </div>
+        <div class="card blue" style="padding:8px 12px;font-size:0.72em">
+          <strong>Tool use</strong> — ladles, tongs, spatulas, colanders, measuring cups
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3>Atomic Task Breakdown</h3>
+      <div class="bar-wrap"><div class="bar-label">Pick &amp; Place variants</div><div class="bar-outer"><div class="bar-inner" style="width:31%;background:var(--rc-blue)"></div></div><div class="bar-val">20</div></div>
+      <div class="bar-wrap"><div class="bar-label">Appliance control</div><div class="bar-outer"><div class="bar-inner" style="width:46%;background:var(--rc-orange)"></div></div><div class="bar-val">30</div></div>
+      <div class="bar-wrap"><div class="bar-label">Door / drawer ops</div><div class="bar-outer"><div class="bar-inner" style="width:17%;background:var(--rc-green)"></div></div><div class="bar-val">11</div></div>
+      <div class="bar-wrap"><div class="bar-label">Navigation</div><div class="bar-outer"><div class="bar-inner" style="width:2%;background:var(--rc-purple)"></div></div><div class="bar-val">1</div></div>
+      <div class="bar-wrap"><div class="bar-label">Simple prep (recipes)</div><div class="bar-outer"><div class="bar-inner" style="width:5%;background:#ff6b6b)"></div></div><div class="bar-val">3</div></div>
+
+      <div class="highlight-box orange" style="margin-top:14px;font-size:0.73em">
+        <strong>Bottom line:</strong> ~98% of atomic tasks require zero navigation. Composite tasks layer navigation on top of manipulation for full household-robot evaluation.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 10: COMPARISON WITH LIBERO/OTHER ─── -->
+<section data-background-color="#0d1117">
+  <h2>How Does It Compare? Benchmark Comparison</h2>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>LIBERO (2023)</th>
+        <th>LIBERO-Long</th>
+        <th>MetaWorld</th>
+        <th>Calvin</th>
+        <th style="color:var(--rc-blue)">RoboCasa365</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Total tasks</td>
+        <td>50</td>
+        <td>10</td>
+        <td>50</td>
+        <td>34</td>
+        <td class="best">365</td>
+      </tr>
+      <tr>
+        <td>Long-horizon composite tasks</td>
+        <td><span class="partial">partial</span></td>
+        <td><span class="tick">✓</span> (4–6 steps)</td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="partial">chained</span></td>
+        <td class="best"><span class="tick">✓</span> 300 tasks (2–10+ steps)</td>
+      </tr>
+      <tr>
+        <td>Episode length (typical)</td>
+        <td>~15–30s</td>
+        <td>~60–120s</td>
+        <td>~5–15s</td>
+        <td>~30–60s</td>
+        <td class="best">10–166s (avg 52s)</td>
+      </tr>
+      <tr>
+        <td>Navigation / mobile manip</td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="tick">✓</span></td>
+        <td class="best"><span class="tick">✓</span> full mobile base</td>
+      </tr>
+      <tr>
+        <td>Scene diversity</td>
+        <td>~10</td>
+        <td>~10</td>
+        <td>single</td>
+        <td>1</td>
+        <td class="best">2,500+</td>
+      </tr>
+      <tr>
+        <td>Total demo data</td>
+        <td>~50 hrs</td>
+        <td>~10 hrs</td>
+        <td>scripted</td>
+        <td>~24 hrs</td>
+        <td class="best">2,200+ hrs</td>
+      </tr>
+      <tr>
+        <td>Number of task categories</td>
+        <td>4</td>
+        <td>1</td>
+        <td>12</td>
+        <td>4</td>
+        <td class="best">60</td>
+      </tr>
+      <tr>
+        <td>Generalization (unseen scenes)</td>
+        <td><span class="partial">limited</span></td>
+        <td><span class="partial">limited</span></td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="partial">partial</span></td>
+        <td class="best"><span class="tick">✓</span> held-out target scenes</td>
+      </tr>
+      <tr>
+        <td>Lifelong learning protocol</td>
+        <td><span class="tick">✓</span></td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="cross">✗</span></td>
+        <td><span class="cross">✗</span></td>
+        <td class="best"><span class="tick">✓</span> 4-phase progression</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="footnote">* LIBERO numbers based on published paper. RoboCasa365 results from ICLR 2026 paper.</p>
+</section>
+
+<!-- ─── SLIDE 11: LIBERO LONG DEEP DIVE ─── -->
+<section data-background-color="#0d1117">
+  <h2>RoboCasa vs. LIBERO-Long — Deep Dive</h2>
+  <div class="two-col">
+    <div>
+      <div class="card" style="border-left:4px solid #666;margin-bottom:12px">
+        <h3 style="color:#aaa">LIBERO-Long</h3>
+        <ul style="font-size:0.72em">
+          <li>10 tasks, each with 4–6 stages of sequential manipulation</li>
+          <li>Episodes: ~60–120 seconds</li>
+          <li>~50 demonstrations per task</li>
+          <li>Fixed tabletop, no navigation</li>
+          <li>Small visual variety (&lt;10 scenes)</li>
+          <li>All tasks are pre-defined sequences: pick A → place B → pick C → …</li>
+          <li>Human success rate baseline: ~70–80%</li>
+        </ul>
+      </div>
+      <div class="highlight-box orange" style="font-size:0.73em">
+        LIBERO-Long is an important baseline but limited to 10 tasks, no navigation, small data scale, and no generalization split.
+      </div>
+    </div>
+    <div>
+      <div class="card blue" style="margin-bottom:12px">
+        <h3>RoboCasa365 Composite Tasks</h3>
+        <ul style="font-size:0.72em">
+          <li><strong>300 composite tasks</strong> across 60 activity categories</li>
+          <li>Episodes: 10–166 seconds (avg 52s, max similar to LIBERO-Long)</li>
+          <li>100 demonstrations per task (human-collected)</li>
+          <li><strong>Navigation between fixtures</strong> embedded in tasks</li>
+          <li>2,500+ diverse scenes for training; 10 held-out for test</li>
+          <li>Tasks require semantic reasoning (e.g., FIFO fridge loading, size-based sorting, type-based categorization)</li>
+          <li>Best model (GR00T) achieves only 9.6% on composite tasks — much harder</li>
+        </ul>
+      </div>
+      <div class="highlight-box green" style="font-size:0.73em">
+        <strong>Key gap filled:</strong> RoboCasa365 provides the scale, diversity, and difficulty that LIBERO-Long lacks — while being directly comparable in episode length for the shorter-horizon tasks.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 12: DATA SCALE ─── -->
+<section data-background-color="#0d1117">
+  <h2>Data Scale — 2,200+ Hours of Demonstrations</h2>
+  <div class="two-col">
+    <div>
+      <h3>Dataset Composition</h3>
+      <div class="bar-wrap" style="margin-top:12px">
+        <div class="bar-label">Human demos (300 tasks)</div>
+        <div class="bar-outer"><div class="bar-inner" style="width:22%;background:var(--rc-blue)"></div></div>
+        <div class="bar-val">482 hrs</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-label">Human demos (target 50)</div>
+        <div class="bar-outer"><div class="bar-inner" style="width:9%;background:var(--rc-blue)"></div></div>
+        <div class="bar-val">193 hrs</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-label">MimicGen synthetic (60 atomic)</div>
+        <div class="bar-outer"><div class="bar-inner" style="width:74%;background:var(--rc-orange)"></div></div>
+        <div class="bar-val">1,615 hrs</div>
+      </div>
+      <div style="margin:16px 0">
+        <div class="stat-row">
+          <div class="stat-item"><div class="stat-big">675</div><div class="stat-label">Human hours</div></div>
+          <div class="stat-item"><div class="stat-big" style="color:var(--rc-orange)">1,615</div><div class="stat-label">Synthetic hours</div></div>
+          <div class="stat-item"><div class="stat-big" style="color:var(--rc-green)">2,290</div><div class="stat-label">Total hours</div></div>
+        </div>
+      </div>
+      <div class="highlight-box" style="font-size:0.72em">
+        Data generated with <strong>MimicGen</strong> augmentation — automatically synthesizing variations from human demos for 10,000 demos/atomic task.
+      </div>
+    </div>
+    <div>
+      <h3>Episode Counts</h3>
+      <table class="rc-table" style="margin-top:10px">
+        <thead><tr><th>Dataset</th><th>Tasks</th><th>Episodes</th></tr></thead>
+        <tbody>
+          <tr><td>Human pretrain</td><td>300</td><td>~30,000</td></tr>
+          <tr><td>Human target</td><td>50</td><td>~25,000</td></tr>
+          <tr><td>Synthetic (MimicGen)</td><td>60 atomic</td><td>600,000+</td></tr>
+          <tr class="best"><td><strong>Composite only</strong></td><td>304</td><td><strong>31,922</strong></td></tr>
+        </tbody>
+      </table>
+      <div class="card orange" style="margin-top:14px;font-size:0.72em">
+        <strong>2,200+ 3D kitchen objects</strong> sourced from Objaverse and AI-generated assets, spanning ingredients, cookware, appliances, utensils, and containers.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 13: WHY GOOD FOR LONG-HORIZON ─── -->
+<section data-background-color="#0d1117">
+  <h2>Why RoboCasa365 for Long-Horizon Reasoning?</h2>
+  <div class="card-grid card-grid-2" style="gap:12px">
+    <div class="card blue">
+      <h3>1. Sequential Decision Chains</h3>
+      <p style="font-size:0.72em">Tasks require robots to execute 2–10+ sub-goals in the correct order. Failure at any step cascades — unlike single-step benchmarks, there is no partial credit from atomic success alone.</p>
+    </div>
+    <div class="card orange">
+      <h3>2. Semantic Reasoning Required</h3>
+      <p style="font-size:0.72em">Tasks like <em>LoadFridgeFifo</em>, <em>BeverageSorting</em>, or <em>FilterMicrowavableItem</em> require the robot to <em>understand categories</em>, not just mimic motor patterns.</p>
+    </div>
+    <div class="card green">
+      <h3>3. Planning Under Partial Observability</h3>
+      <p style="font-size:0.72em">Kitchen drawers, fridge compartments, and cabinet interiors are hidden. The robot must plan retrieval sequences without full state visibility — mirroring real-world challenges.</p>
+    </div>
+    <div class="card purple">
+      <h3>4. Temporal Extended Actions</h3>
+      <p style="font-size:0.72em">Many tasks span 10–166 seconds at 20 Hz control = <strong>200–3,320 control steps per episode</strong>. This directly tests long temporal credit assignment in policy learning.</p>
+    </div>
+    <div class="card blue">
+      <h3>5. Task Composition &amp; Generalization</h3>
+      <p style="font-size:0.72em">Composite-Unseen tasks in evaluation test whether learned skills <em>compose to novel tasks</em> — a key measure of genuine planning vs. memorization.</p>
+    </div>
+    <div class="card orange">
+      <h3>6. Real-World Action Space</h3>
+      <p style="font-size:0.72em">Appliance control (stove knobs, faucet handles, blender buttons) + navigation + dexterous manipulation = the full action space of household robots.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 14: BENCHMARK RESULTS ─── -->
+<section data-background-color="#0d1117">
+  <h2>Benchmark Results — State of the Art</h2>
+  <h3>Multi-Task Learning (train on 300 tasks, 482 hours)</h3>
+  <table class="rc-table" style="margin-bottom:18px">
+    <thead>
+      <tr><th>Task Split</th><th>Diffusion Policy</th><th>π₀</th><th>π₀.₅</th><th>GR00T N1.5</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="badge badge-blue">Atomic-Seen</span></td><td>15.7%</td><td>34.6%</td><td>39.6%</td><td class="best">43.0%</td></tr>
+      <tr><td><span class="badge badge-orange">Composite-Seen</span></td><td>0.2%</td><td>6.1%</td><td>7.1%</td><td class="best">9.6%</td></tr>
+      <tr><td><span class="badge badge-purple">Composite-Unseen</span></td><td>1.25%</td><td>1.1%</td><td>1.2%</td><td class="best">4.4%</td></tr>
+      <tr><td><strong>Average</strong></td><td>6.1%</td><td>14.8%</td><td>16.9%</td><td class="best">20.0%</td></tr>
+    </tbody>
+  </table>
+  <h3>Foundation Model Learning (pretrain 2200hrs → fine-tune target)</h3>
+  <table class="rc-table">
+    <thead>
+      <tr><th>Task Split</th><th>Pretrain Only</th><th>Target Only (100%)</th><th>Pretrain + Target (100%)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="badge badge-blue">Atomic-Seen</span></td><td>41.9%</td><td>60.6%</td><td class="best">68.5%</td></tr>
+      <tr><td><span class="badge badge-orange">Composite-Seen</span></td><td>0.0%</td><td>35.0%</td><td class="best">40.6%</td></tr>
+      <tr><td><span class="badge badge-purple">Composite-Unseen</span></td><td>0.2%</td><td>33.3%</td><td class="best">42.1%</td></tr>
+      <tr><td><strong>Average</strong></td><td>15.1%</td><td>43.7%</td><td class="best">51.1%</td></tr>
+    </tbody>
+  </table>
+  <div class="highlight-box orange" style="margin-top:12px;font-size:0.72em">
+    <strong>Key finding:</strong> Even the best model (GR00T N1.5) achieves only 9.6% on composite tasks in multi-task setting — showing these tasks are <em>genuinely hard</em> and leave significant room for improvement.
+  </div>
+</section>
+
+<!-- ─── SLIDE 15: THREE BENCHMARKING SETTINGS ─── -->
+<section data-background-color="#0d1117">
+  <h2>Three Benchmarking Protocols</h2>
+  <div class="card-grid card-grid-3" style="gap:14px">
+    <div class="card blue">
+      <h3>1. Multi-Task Learning</h3>
+      <div style="font-size:0.72em">
+        <p><strong>Goal:</strong> Learn a single policy across all 300 tasks from 482 hrs of human data.</p>
+        <p><strong>Train:</strong> Human demos, 300 tasks, 100 demos/task</p>
+        <p><strong>Eval:</strong> Pretrain scenes</p>
+        <p><strong>Measures:</strong> Breadth of multi-task generalization</p>
+      </div>
+    </div>
+    <div class="card orange">
+      <h3>2. Foundation Model Learning</h3>
+      <div style="font-size:0.72em">
+        <p><strong>Goal:</strong> Pretrain on 2,200+ hrs, fine-tune on 50 target tasks.</p>
+        <p><strong>Pretrain:</strong> 482 hrs human + 1,615 hrs synthetic</p>
+        <p><strong>Fine-tune:</strong> 193 hrs, 3 splits (atomic/comp seen/unseen)</p>
+        <p><strong>Eval:</strong> Held-out target scenes</p>
+        <p><strong>Measures:</strong> Transfer, data efficiency</p>
+      </div>
+    </div>
+    <div class="card green">
+      <h3>3. Lifelong Learning</h3>
+      <div style="font-size:0.72em">
+        <p><strong>Goal:</strong> Sequentially learn harder tasks without forgetting.</p>
+        <p><strong>4 phases:</strong></p>
+        <ul>
+          <li>Phase 1: Atomic tasks (~41.5% success)</li>
+          <li>Phase 2: 2–3 stage tasks (~24.5%)</li>
+          <li>Phase 3: 4–5 stage tasks</li>
+          <li>Phase 4: 6+ stage tasks</li>
+        </ul>
+        <p><strong>Measures:</strong> Continual learning, forgetting</p>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:14px;font-size:0.73em">
+    <strong>Supported algorithms:</strong> Diffusion Policy, π₀ / π₀.₅ (OpenPI), GR00T N1.5 — representing the current frontier of visuomotor robot learning.
+  </div>
+</section>
+
+<!-- ─── SLIDE 16: KITCHEN SCENES ─── -->
+<section data-background-color="#0d1117">
+  <h2>Kitchen Scene Gallery</h2>
+  <p style="font-size:0.72em;color:#8b949e;margin-bottom:10px">Pretrain scenes (left) vs. held-out target scenes (right) — disjoint layouts &amp; visual styles for true generalization testing</p>
+  <div style="display:grid;grid-template-columns:3fr 1fr;gap:12px">
+    <div>
+      <p style="font-size:0.65em;color:var(--rc-blue);margin-bottom:6px">Pretrain scenes (2,500+)</p>
+      <div class="img-grid" style="grid-template-columns:repeat(4,1fr);gap:4px">
+        <div><img src="docs/images/pretrain_scenes/layout20_style55.png"><div class="img-caption">L20 S55</div></div>
+        <div><img src="docs/images/pretrain_scenes/layout23_style24.png"><div class="img-caption">L23 S24</div></div>
+        <div><img src="docs/images/pretrain_scenes/layout31_style36.png"><div class="img-caption">L31 S36</div></div>
+        <div><img src="docs/images/pretrain_scenes/layout35_style14.png"><div class="img-caption">L35 S14</div></div>
+        <div><img src="docs/images/pretrain_scenes/layout46_style38.png"><div class="img-caption">L46 S38</div></div>
+        <div><img src="docs/images/pretrain_scenes/layout47_style40.png"><div class="img-caption">L47 S40</div></div>
+        <div><img src="docs/images/pretrain_scenes/layout51_style34.png"><div class="img-caption">L51 S34</div></div>
+        <div><img src="docs/images/pretrain_scenes/layout57_style46.png"><div class="img-caption">L57 S46</div></div>
+      </div>
+    </div>
+    <div>
+      <p style="font-size:0.65em;color:var(--rc-orange);margin-bottom:6px">Target scenes (10 held-out)</p>
+      <div class="img-grid" style="grid-template-columns:1fr 1fr;gap:4px">
+        <div><img src="docs/images/target_scenes/layout1_style1.png"><div class="img-caption">T1</div></div>
+        <div><img src="docs/images/target_scenes/layout2_style2.png"><div class="img-caption">T2</div></div>
+        <div><img src="docs/images/target_scenes/layout3_style3.png"><div class="img-caption">T3</div></div>
+        <div><img src="docs/images/target_scenes/layout4_style4.png"><div class="img-caption">T4</div></div>
+        <div><img src="docs/images/target_scenes/layout5_style5.png"><div class="img-caption">T5</div></div>
+        <div><img src="docs/images/target_scenes/layout6_style6.png"><div class="img-caption">T6</div></div>
+        <div><img src="docs/images/target_scenes/layout7_style7.png"><div class="img-caption">T7</div></div>
+        <div><img src="docs/images/target_scenes/layout8_style8.png"><div class="img-caption">T8</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SLIDE 17: LAYOUT & STYLE DIVERSITY ─── -->
+<section data-background-color="#0d1117">
+  <h2>Layout &amp; Visual Style Diversity</h2>
+  <div class="two-col">
+    <div>
+      <img src="docs/images/layouts.png" style="width:100%;border-radius:8px;border:1px solid #30363d">
+      <div class="img-caption" style="font-size:0.7em;margin-top:6px">Multiple kitchen floor plan layouts</div>
+    </div>
+    <div>
+      <img src="docs/images/styles.png" style="width:100%;border-radius:8px;border:1px solid #30363d">
+      <div class="img-caption" style="font-size:0.7em;margin-top:6px">Multiple visual / material styles</div>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:12px;font-size:0.73em">
+    <strong>Layouts</strong> vary the spatial arrangement of fixtures. <strong>Styles</strong> vary surface textures, lighting, and object appearances. Their cross-product creates 2,500+ unique environments, preventing policies from memorizing fixed visual patterns.
+  </div>
+</section>
+
+<!-- ─── SLIDE 18: SUMMARY ─── -->
+<section data-background-color="#0d1117" class="title-slide">
+  <h2 style="text-align:center;border:none">Summary</h2>
+  <div class="card-grid card-grid-2" style="max-width:900px;margin:0 auto;text-align:left">
+    <div class="card blue">
+      <h3>📊 Scale</h3>
+      <p style="font-size:0.72em">365 tasks · 60 categories · 2,500+ scenes · 2,200+ hours · 2,200+ 3D objects</p>
+    </div>
+    <div class="card orange">
+      <h3>⏱️ Durations</h3>
+      <p style="font-size:0.72em">10–166s (avg 52s) — comparable to or longer than LIBERO-Long on hard tasks</p>
+    </div>
+    <div class="card green">
+      <h3>🚀 Navigation</h3>
+      <p style="font-size:0.72em">Yes — mobile base, 14 fixture types, multi-room navigation required</p>
+    </div>
+    <div class="card purple">
+      <h3>🤖 Manipulation</h3>
+      <p style="font-size:0.72em">65 pure-manipulation atomic tasks + 300 composite tasks (mostly manipulation-heavy)</p>
+    </div>
+    <div class="card blue">
+      <h3>🧠 Long-Horizon Reasoning</h3>
+      <p style="font-size:0.72em">Semantic task goals, sequential decision chains, hidden state, generalization to unseen tasks</p>
+    </div>
+    <div class="card orange">
+      <h3>📈 SOTA is hard</h3>
+      <p style="font-size:0.72em">Best model (GR00T N1.5) achieves only 9.6% on composite tasks in multi-task setting — large open challenge</p>
+    </div>
+  </div>
+  <div style="margin-top:18px;font-size:0.72em;color:#8b949e">
+    robocasa.ai &nbsp;·&nbsp; arxiv: 2603.04356 &nbsp;·&nbsp; ICLR 2026
+  </div>
+</section>
+
+</div><!-- .slides -->
+</div><!-- .reveal -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: 'c/t',
+  controls: true,
+  progress: true,
+  center: false,
+  width: 1200,
+  height: 700,
+  margin: 0.04,
+  minScale: 0.2,
+  maxScale: 2.0,
+  transition: 'slide',
+  transitionSpeed: 'fast',
+});
+</script>
+</body>
+</html>
