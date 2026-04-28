@@ -255,6 +255,11 @@ def main():
             if args.contact_sheet and saved:
                 sheet_path = os.path.join(out_dir, "contact_sheet.png")
                 create_contact_sheet(saved, sheet_path, task)
+            instruction = get_episode_task(lerobot_path, args.demo_index)
+            txt_path = os.path.join(out_dir, "instruction.txt")
+            with open(txt_path, "w") as f:
+                f.write(f"Task: {task}\n")
+                f.write(f"Instruction: {instruction}\n")
         except Exception as e:
             print(f"  [{task}] ERROR: {e}")
 

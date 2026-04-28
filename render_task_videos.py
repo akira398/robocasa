@@ -235,6 +235,11 @@ def main():
             )
             size_mb = os.path.getsize(output_path) / 1e6
             print(f"→ {output_path} ({size_mb:.1f} MB)")
+            instruction = get_episode_task(lerobot_path, args.demo_index)
+            txt_path = output_path.replace(".mp4", ".txt")
+            with open(txt_path, "w") as f:
+                f.write(f"Task: {task}\n")
+                f.write(f"Instruction: {instruction}\n")
             done.append(task)
         except Exception as e:
             print(f"ERROR: {e}")
