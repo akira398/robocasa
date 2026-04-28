@@ -63,13 +63,17 @@ NAV_COMPOSITE="ServeTea PlaceDishesBySink HotDogSetup \
   DivideBuffetTrays RecycleSodaCans PackFoodByTemp \
   PrepareDrinkStation SetBowlsForSoup PrepareCocktailStation"
 
-# 10 longest tasks (by max horizon); several require cross-zone traversal
-LONGEST_COMPOSITE="DivideBuffetTrays RecycleSodaCans PrepareDrinkStation SetBowlsForSoup SpicyMarinade \
-  BeverageSorting PrepareCocktailStation ArrangeUtensilsByType ReturnWashingSupplies ClearSink"
+# 10 longest pure-manipulation composite tasks (all fixtures adjacent via ref=,
+# max base displacement <= 0.5 m in demo data):
+#   SpicyMarinade(3600), ClearSink(3300), CleanBoard(3200), MicrowaveThawing(3100),
+#   CerealAndBowl(2900), HeatMultipleWater(2800), WaffleReheat(2700),
+#   SweetSavoryToastSetup(2700), OrganizeCleaningSupplies(2700), PackIdenticalLunches(2600)
+LONGEST_PURE_MANIP="SpicyMarinade ClearSink CleanBoard MicrowaveThawing CerealAndBowl \
+  HeatMultipleWater WaffleReheat SweetSavoryToastSetup OrganizeCleaningSupplies PackIdenticalLunches"
 
 ALL_TASKS="$PURE_MANIP_ATOMIC $PURE_MANIP_COMPOSITE \
            $NAV_ATOMIC $NAV_COMPOSITE \
-           $LONGEST_COMPOSITE"
+           $LONGEST_PURE_MANIP"
 
 # deduplicate
 ALL_TASKS=$(echo "$ALL_TASKS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
@@ -124,16 +128,16 @@ python render_task_videos.py \
 echo ""
 echo "================================================================"
 echo " Step 4: output/longest  (images + videos)"
-echo " 10 longest tasks by horizon (mix of pure manip + cross-zone)"
+echo " 10 longest pure-manipulation tasks (all fixtures adjacent, no base traversal)"
 echo "================================================================"
 
 python render_task_images.py \
-  --tasks $LONGEST_COMPOSITE \
+  --tasks $LONGEST_PURE_MANIP \
   --frames_per_task 4 --contact_sheet \
   --output_dir output/longest
 
 python render_task_videos.py \
-  --tasks $LONGEST_COMPOSITE \
+  --tasks $LONGEST_PURE_MANIP \
   --video_skip 3 \
   --output_dir output/longest
 
@@ -144,5 +148,5 @@ echo "================================================================"
 echo " All done. Output folders:"
 echo "   output/examples_pure_manipulation/  — base displacement <= 0.5 m in demos"
 echo "   output/examples_navigation/         — base displacement > 0.5 m in demos"
-echo "   output/longest/                     — 10 longest tasks"
+echo "   output/longest/                     — 10 longest pure-manipulation tasks"
 echo "================================================================"
