@@ -19,27 +19,48 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # ── task lists ────────────────────────────────────────────────────────────────
+#
+# Navigation classification is data-driven: we measure the robot's base position
+# displacement from episode_000000.parquet (observation.state[0:2] = base x,y).
+# Tasks with max displacement from start > 0.5 m require navigation.
+#
+# Measured max displacements for tasks in this script:
+#   TurnOnToaster           ~0.00 m   pure
+#   TurnOnStove              0.22 m   pure
+#   PickPlaceCounterToStove ~0.00 m   pure
+#   PickPlaceCounterToCabinet~0.00 m  pure
+#   OpenCabinet             ~0.00 m   pure
+#   WashLettuce             ~0.00 m   pure
+#   LoadDishwasher          ~0.00 m   pure
+#   PrepareCoffee           ~0.00 m   pure
+#   SpicyMarinade           ~0.00 m   pure
+#   ClearSink               ~0.00 m   pure  (base_mode active but no displacement)
+#   SearingMeat              1.02 m   navigation
+#   ReturnWashingSupplies    1.49 m   navigation
+#   PlaceDishesBySink        1.21 m   navigation
+#   ArrangeUtensilsByType    1.85 m   navigation
+#   BeverageSorting          2.40 m   navigation
+#   NavigateKitchen          2.44 m   navigation
+#   ServeTea                 2.94 m   navigation
+#   HotDogSetup              2.94 m   navigation
+#   RecycleSodaCans          3.05 m   navigation
+#   DivideBuffetTrays        3.70 m   navigation
+#   PrepareCocktailStation   3.41 m   navigation
+#   SetBowlsForSoup          4.52 m   navigation
+#   PackFoodByTemp           4.80 m   navigation
+#   PrepareDrinkStation      6.93 m   navigation
 
-# Truly pure manipulation: all destination fixtures are adjacent (linked via ref=)
-# so the robot arm can complete the task without moving the base.
+# Pure manipulation: max base displacement <= 0.5 m in demo episode 0
 PURE_MANIP_ATOMIC="TurnOnToaster TurnOnStove PickPlaceCounterToStove PickPlaceCounterToCabinet OpenCabinet"
 
-PURE_MANIP_COMPOSITE="WashLettuce LoadDishwasher PrepareCoffee SearingMeat \
-  SpicyMarinade ReturnWashingSupplies ClearSink"
+PURE_MANIP_COMPOSITE="WashLettuce LoadDishwasher PrepareCoffee SpicyMarinade ClearSink"
 
-# Explicit navigation: mobile-base traversal stated in the task description
-NAV_EXPLICIT_ATOMIC="NavigateKitchen"
-NAV_EXPLICIT_COMPOSITE="ServeTea PlaceDishesBySink HotDogSetup"
-
-# Multi-fixture navigation: destination fixtures are NOT adjacent (no ref= link),
-# requiring base repositioning across the kitchen.
-# e.g. BeverageSorting: two cabinets up to 2.5 m apart
-#      ArrangeUtensilsByType: cabinet + drawer + counter, all independently placed
-NAV_MULTI_FIXTURE_COMPOSITE="BeverageSorting ArrangeUtensilsByType"
-
-# Cross-zone tasks: require delivering to a dining counter in a separate kitchen zone
-# (task class sets EXCLUDE_LAYOUTS = Kitchen.DINING_COUNTER_EXCLUDED_LAYOUTS)
-NAV_CROSS_ZONE_COMPOSITE="DivideBuffetTrays RecycleSodaCans PackFoodByTemp \
+# Navigation: max base displacement > 0.5 m in demo episode 0
+NAV_ATOMIC="NavigateKitchen"
+NAV_COMPOSITE="ServeTea PlaceDishesBySink HotDogSetup \
+  SearingMeat ReturnWashingSupplies \
+  BeverageSorting ArrangeUtensilsByType \
+  DivideBuffetTrays RecycleSodaCans PackFoodByTemp \
   PrepareDrinkStation SetBowlsForSoup PrepareCocktailStation"
 
 # 10 longest tasks (by max horizon); several require cross-zone traversal
@@ -47,8 +68,7 @@ LONGEST_COMPOSITE="DivideBuffetTrays RecycleSodaCans PrepareDrinkStation SetBowl
   BeverageSorting PrepareCocktailStation ArrangeUtensilsByType ReturnWashingSupplies ClearSink"
 
 ALL_TASKS="$PURE_MANIP_ATOMIC $PURE_MANIP_COMPOSITE \
-           $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE \
-           $NAV_MULTI_FIXTURE_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
+           $NAV_ATOMIC $NAV_COMPOSITE \
            $LONGEST_COMPOSITE"
 
 # deduplicate
@@ -86,18 +106,16 @@ python render_task_videos.py \
 echo ""
 echo "================================================================"
 echo " Step 3: output/examples_navigation  (images + videos)"
-echo " Includes: explicit nav + multi-fixture + cross-zone dining-counter tasks"
+echo " Tasks with base displacement > 0.5 m in demo data"
 echo "================================================================"
 
 python render_task_images.py \
-  --tasks $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE \
-          $NAV_MULTI_FIXTURE_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
+  --tasks $NAV_ATOMIC $NAV_COMPOSITE \
   --frames_per_task 4 --contact_sheet \
   --output_dir output/examples_navigation
 
 python render_task_videos.py \
-  --tasks $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE \
-          $NAV_MULTI_FIXTURE_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
+  --tasks $NAV_ATOMIC $NAV_COMPOSITE \
   --video_skip 3 \
   --output_dir output/examples_navigation
 
@@ -124,7 +142,7 @@ python render_task_videos.py \
 echo ""
 echo "================================================================"
 echo " All done. Output folders:"
-echo "   output/examples_pure_manipulation/  — truly pure manipulation (adjacent fixtures only)"
-echo "   output/examples_navigation/         — explicit nav + multi-fixture + cross-zone"
+echo "   output/examples_pure_manipulation/  — base displacement <= 0.5 m in demos"
+echo "   output/examples_navigation/         — base displacement > 0.5 m in demos"
 echo "   output/longest/                     — 10 longest tasks"
 echo "================================================================"
