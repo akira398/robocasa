@@ -200,6 +200,27 @@ def task_type(task_name):
         return ""
 
 
+def find_contact_sheet_any(task: str):
+    """Search all output subdirs for a contact sheet for the given task."""
+    search_dirs = [
+        OUTPUT / "examples_pure_manipulation" / "atomic",
+        OUTPUT / "examples_pure_manipulation" / "composite",
+        OUTPUT / "examples_navigation" / "atomic",
+        OUTPUT / "examples_navigation" / "composite",
+        OUTPUT / "longest" / "atomic",
+        OUTPUT / "longest" / "composite",
+    ]
+    for d in search_dirs:
+        if not d.exists():
+            continue
+        for folder in d.iterdir():
+            if folder.name.startswith(task + "__"):
+                cs = folder / "contact_sheet.png"
+                if cs.exists():
+                    return cs
+    return None
+
+
 def task_grid(sl, items, top_y, cols=2, img_w_in=5.9):
     """
     items = list of (contact_sheet_path, task_name, instruction, horizon)
@@ -207,11 +228,10 @@ def task_grid(sl, items, top_y, cols=2, img_w_in=5.9):
     img_w_in: width of each contact sheet in inches (height auto from 4:1 ratio).
     """
     img_h_in = img_w_in / 4.0
-    label_h  = Inches(0.65)
+    label_h  = Inches(0.80)   # task name (0.28) + instruction (0.50) + gap
     cell_h   = Inches(img_h_in) + label_h + Inches(0.15)
     margin   = Inches(0.45)
     gap      = Inches(0.25)
-    cell_w   = img_w_in  # we'll compute x based on cols
 
     total_w  = Inches(13.33)
     cell_w_i = (total_w - 2 * margin - (cols - 1) * gap) / cols
@@ -237,14 +257,11 @@ def task_grid(sl, items, top_y, cols=2, img_w_in=5.9):
            x + Inches(0.08), ty, cell_w_i - Inches(0.12), Inches(0.28),
            size=10, bold=True, color=BLUE)
 
-        # instruction
+        # full instruction — no truncation
         instr_text = full_instruction(task) or instr
-        # truncate to ~120 chars
-        if len(instr_text) > 120:
-            instr_text = instr_text[:117] + "…"
         tb(sl, instr_text,
            x + Inches(0.08), ty + Inches(0.28),
-           cell_w_i - Inches(0.12), Inches(0.35),
+           cell_w_i - Inches(0.12), Inches(0.50),
            size=9, color=MGRAY, italic=True)
 
 
@@ -371,42 +388,63 @@ bullet_tb(sl, [
 # SLIDE 4 — Navigation
 # ═══════════════════════════════════════════════════════════════════════════════
 sl = slide()
-top = slide_heading(sl, "Navigation & Mobile Manipulation")
+top = slide_heading(sl, "Navigation & Mobile Manipulation",
+                    subtitle="Classification by measured robot base displacement from episode_000000.parquet · threshold > 0.5 m")
 
 tb(sl,
-   "The robot uses an Omron mobile base for navigation. However, the vast majority of tasks "
-   "are pure manipulation — the robot starts near the relevant fixture and uses only its arm.",
-   Inches(0.5), top, Inches(12.3), Inches(0.55), size=13, color=DGRAY)
+   "Navigation is determined empirically: max base displacement (observation.state[0:2]) from the "
+   "start position across the demo episode. Tasks with displacement > 0.5 m require mobile navigation.",
+   Inches(0.5), top, Inches(12.3), Inches(0.50), size=12, color=DGRAY)
 
 simple_table(sl,
-    ["Category",   "Tasks Requiring Navigation",  "Pure Manipulation Tasks"],
+    ["Category", "Confirmed Navigation (> 0.5 m)", "Pure Manipulation (≤ 0.5 m)"],
     [
-        ["Atomic",    "1 / 65   (1.5%)",           "64 / 65   (98.5%)"],
-        ["Composite", "3 / 252  (1.2%)",           "249 / 252  (98.8%)"],
-        ["Total",     ("4 / 317  (1.3%)", BLUE),   ("313 / 317  (98.7%)", GREEN)],
+        ["Atomic  (65 tasks)",    "1  (NavigateKitchen only)",           "64 / 65  (98.5%)"],
+        ["Composite  (300 tasks)", "≥ 13 confirmed from measured sample", "≥ 287 / 300  (≥ 95.7%)"],
+        ["Total  (365 tasks)",    ("≥ 14 confirmed", BLUE),              ("≥ 351 / 365  (≥ 96.2%)", GREEN)],
     ],
-    Inches(0.5), top + Inches(0.65), Inches(8.5), Inches(1.4),
-    col_widths=[Inches(1.4), Inches(3.5), Inches(3.6)])
+    Inches(0.5), top + Inches(0.60), Inches(12.3), Inches(1.05),
+    col_widths=[Inches(2.0), Inches(4.0), Inches(6.3)])
 
-tb(sl, "Tasks that genuinely require mobile-base navigation:",
-   Inches(0.5), top + Inches(2.2), Inches(12.3), Inches(0.32),
-   size=13, bold=True, color=DGRAY)
+tb(sl, "All 14 confirmed navigation tasks  (sorted by measured base displacement):",
+   Inches(0.5), top + Inches(1.80), Inches(12.3), Inches(0.28),
+   size=12, bold=True, color=DGRAY)
 
 simple_table(sl,
-    ["Task", "Type", "Horizon", "Description"],
+    ["Task", "Type", "Horizon", "Displacement", "Full language instruction (episode 0)"],
     [
-        ["NavigateKitchen",   "Atomic",    "300 steps  (15 s)",   "Drive the mobile base to a target kitchen fixture"],
-        ["ServeTea",          "Composite", "900 steps  (45 s)",   "Pick teacup from microwave, navigate to dining table, place on saucer"],
-        ["PlaceDishesBySink", "Composite", "1,600 steps  (80 s)", "Collect cup and bowl from counter, bring to the sink area"],
-        ["HotDogSetup",       "Composite", "2,800 steps  (140 s)","Gather bun from counter + sausage from fridge, deliver to dining table"],
+        ["SearingMeat",           "Composite", "2,900  (145 s)", "1.02 m",
+         full_instruction("SearingMeat") or "Grab the pan from the cabinet and place it on the rear right burner…"],
+        ["PlaceDishesBySink",     "Composite", "1,600  (80 s)",  "1.21 m",
+         full_instruction("PlaceDishesBySink") or "Pick the cup and bowl from the counter and place them by the sink"],
+        ["ReturnWashingSupplies", "Composite", "3,400  (170 s)", "1.49 m",
+         full_instruction("ReturnWashingSupplies") or "Pick up the bar soap and dish brush from the sink and place them back"],
+        ["ArrangeUtensilsByType", "Composite", "3,400  (170 s)", "1.85 m",
+         full_instruction("ArrangeUtensilsByType") or "Organize the utensils by type to different locations"],
+        ["BeverageSorting",       "Composite", "3,500  (175 s)", "2.40 m",
+         full_instruction("BeverageSorting") or "Sort all alcoholic drinks to one cabinet and non-alcoholic to another"],
+        ["NavigateKitchen",       "Atomic",    "300  (15 s)",    "2.44 m",
+         full_instruction("NavigateKitchen") or "Navigate to the fridge"],
+        ["ServeTea",              "Composite", "900  (45 s)",    "2.94 m",
+         full_instruction("ServeTea") or "Pick the cup of tea, navigate to the dining table and place it on the saucer"],
+        ["HotDogSetup",           "Composite", "2,800  (140 s)", "2.94 m",
+         full_instruction("HotDogSetup") or "Move the hot dog bun to the plate on the dining table"],
+        ["RecycleSodaCans",       "Composite", "4,500  (225 s)", "3.05 m",
+         full_instruction("RecycleSodaCans") or "Four empty soda cans are scattered around the kitchen, gather all the cans"],
+        ["PrepareCocktailStation","Composite", "3,500  (175 s)", "3.41 m",
+         full_instruction("PrepareCocktailStation") or "There is a bowl on the dining counter, grab a lemon wedge from the fridge"],
+        ["DivideBuffetTrays",     "Composite", "4,800  (240 s)", "3.70 m",
+         full_instruction("DivideBuffetTrays") or "Gather the lemon wedge and cucumber from the fridge and place them on the trays"],
+        ["SetBowlsForSoup",       "Composite", "3,600  (180 s)", "4.52 m",
+         full_instruction("SetBowlsForSoup") or "Move the bowls from the cabinet to the plates on the dining table"],
+        ["PackFoodByTemp",        "Composite", "3,300  (165 s)", "4.80 m",
+         full_instruction("PackFoodByTemp") or "Place the cold items from the fridge in one tupperware and warm items in another"],
+        ["PrepareDrinkStation",   "Composite", "3,900  (195 s)", "6.93 m",
+         full_instruction("PrepareDrinkStation") or "There is a tray on the dining counter, grab the cup, mug and pitcher"],
     ],
-    Inches(0.5), top + Inches(2.58), Inches(12.3), Inches(1.85),
-    col_widths=[Inches(2.0), Inches(1.2), Inches(2.1), Inches(7.0)])
-
-tb(sl,
-   "These tasks use kitchen layouts where the destination fixture (dining table) is placed "
-   "in a separate area, requiring the robot to traverse the kitchen with its mobile base.",
-   Inches(0.5), top + Inches(4.6), Inches(12.3), Inches(0.55), size=12, color=MGRAY, italic=True)
+    Inches(0.5), top + Inches(2.14), Inches(12.3), Inches(4.05),
+    col_widths=[Inches(2.1), Inches(1.0), Inches(1.3), Inches(1.0), Inches(6.9)],
+    hfont=10, bfont=8)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -796,43 +834,64 @@ task_grid(sl, atomic_items, top, cols=2, img_w_in=6.0)
 # ═══════════════════════════════════════════════════════════════════════════════
 sl = slide()
 top = slide_heading(sl, "Pure Manipulation — Short to Medium Composite Tasks",
-                    subtitle="Composite tasks without navigation, horizon 1,100–1,200 steps (~55–60 s)")
+                    subtitle="Confirmed pure: max base displacement ≤ 0.5 m in demo data · horizon 1,100–3,600 steps")
 
-comp_short = ["WashLettuce", "LoadDishwasher", "PrepareCoffee", "SearingMeat"]
+# All confirmed pure composite tasks from measurement (< 0.01 m displacement)
+comp_short = ["WashLettuce", "LoadDishwasher", "PrepareCoffee", "SpicyMarinade"]
 items = []
 for task in comp_short:
-    cs_dir = OUTPUT / "examples_pure_manipulation" / "composite"
-    for d in cs_dir.iterdir():
-        if d.name.startswith(task + "__"):
-            cs = d / "contact_sheet.png"
-            if cs.exists():
-                _, instr = parse_folder(d.name)
-                items.append((cs, task, instr, get_horizon(task)))
-            break
+    cs = find_contact_sheet_any(task)
+    if cs:
+        items.append((cs, task, "", get_horizon(task)))
 
 task_grid(sl, items, top, cols=2, img_w_in=6.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SLIDE 12 — Pure Manipulation: Long Composite Tasks
+# SLIDE 12 — 10 Longest Pure Manipulation Tasks
 # ═══════════════════════════════════════════════════════════════════════════════
 sl = slide()
-top = slide_heading(sl, "Pure Manipulation — Long Composite Tasks",
-                    subtitle="Composite tasks, horizon 3,300–4,800 steps (~165–240 s)")
+top = slide_heading(sl, "10 Longest Pure Manipulation Tasks",
+                    subtitle="All confirmed zero base movement (< 0.01 m displacement) · ranked by task horizon")
 
-comp_long = ["PackFoodByTemp", "BeverageSorting", "RecycleSodaCans", "DivideBuffetTrays"]
-items = []
-for task in comp_long:
-    cs_dir = OUTPUT / "examples_pure_manipulation" / "composite"
-    for d in cs_dir.iterdir():
-        if d.name.startswith(task + "__"):
-            cs = d / "contact_sheet.png"
-            if cs.exists():
-                _, instr = parse_folder(d.name)
-                items.append((cs, task, instr, get_horizon(task)))
-            break
+# Table of all 10 with measured displacement
+longest_pure = [
+    ("SpicyMarinade",          3600, 0.0002),
+    ("ClearSink",              3300, 0.0002),
+    ("MicrowaveThawing",       3100, 0.0002),
+    ("CerealAndBowl",          2900, 0.0013),
+    ("SweetSavoryToastSetup",  2700, 0.0009),
+    ("OrganizeCleaningSupplies",2700, 0.0009),
+    ("ToastBaguette",          2600, 0.0009),
+    ("PrepareToast",           2500, 0.0002),
+    ("RestockBowls",           2400, 0.0002),
+    ("MakeFruitBowl",          2300, 0.0006),
+]
+simple_table(sl,
+    ["Rank", "Task", "Horizon", "Duration", "Max Base Displacement", "Full language instruction (episode 0)"],
+    [
+        [str(i+1), task,
+         f"{h:,} steps",
+         f"{h//20} s",
+         f"{d:.4f} m",
+         full_instruction(task) or ""]
+        for i, (task, h, d) in enumerate(longest_pure)
+    ],
+    Inches(0.5), top, Inches(12.3), Inches(4.2),
+    col_widths=[Inches(0.45), Inches(2.3), Inches(1.1), Inches(0.8), Inches(1.5), Inches(6.15)],
+    hfont=11, bfont=10)
 
-task_grid(sl, items, top, cols=2, img_w_in=6.0)
+# Visual examples for the two tasks that have contact sheets
+tb(sl, "Visual examples (contact sheets available):",
+   Inches(0.5), top + Inches(4.35), Inches(12.3), Inches(0.28),
+   size=11, bold=True, color=DGRAY)
+long_pure_items = []
+for task, h, _ in longest_pure[:2]:
+    cs = find_contact_sheet_any(task)
+    if cs:
+        long_pure_items.append((cs, task, "", h))
+if long_pure_items:
+    task_grid(sl, long_pure_items, top + Inches(4.65), cols=2, img_w_in=6.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -840,30 +899,30 @@ task_grid(sl, items, top, cols=2, img_w_in=6.0)
 # ═══════════════════════════════════════════════════════════════════════════════
 sl = slide()
 top = slide_heading(sl, "Pure Manipulation — Full Range: Short to Longest",
-                    subtitle="10 tasks across the full horizon spectrum: 200 steps (10 s) → 4,800 steps (240 s)")
+                    subtitle="All confirmed pure (max base displacement ≤ 0.5 m) · atomic 200–700 steps, composite up to 3,600 steps")
 
-all_10 = [
-    ("TurnOnToaster",            "atomic",    "examples_pure_manipulation/atomic"),
-    ("TurnOnStove",               "atomic",    "examples_pure_manipulation/atomic"),
-    ("PickPlaceCounterToStove",   "atomic",    "examples_pure_manipulation/atomic"),
-    ("PickPlaceCounterToCabinet", "atomic",    "examples_pure_manipulation/atomic"),
-    ("OpenCabinet",               "atomic",    "examples_pure_manipulation/atomic"),
-    ("WashLettuce",               "composite", "examples_pure_manipulation/composite"),
-    ("LoadDishwasher",            "composite", "examples_pure_manipulation/composite"),
-    ("PrepareCoffee",             "composite", "examples_pure_manipulation/composite"),
-    ("SearingMeat",               "composite", "examples_pure_manipulation/composite"),
-    ("DivideBuffetTrays",         "composite", "examples_pure_manipulation/composite"),
+# 5 atomic + 5 pure composite spanning the horizon range
+all_10_pure = [
+    ("TurnOnToaster",            "atomic"),
+    ("TurnOnStove",               "atomic"),
+    ("PickPlaceCounterToStove",   "atomic"),
+    ("PickPlaceCounterToCabinet", "atomic"),
+    ("OpenCabinet",               "atomic"),
+    ("WashLettuce",               "composite"),
+    ("LoadDishwasher",            "composite"),
+    ("PrepareCoffee",             "composite"),
+    ("SpicyMarinade",             "composite"),
+    ("ClearSink",                 "composite"),
 ]
 
-# Two-column table with horizon info, no images (overview / summary slide)
 simple_table(sl,
-    ["#", "Task", "Type", "Horizon", "Duration", "Description (episode 0)"],
+    ["#", "Task", "Type", "Horizon", "Duration", "Full language instruction (episode 0)"],
     [
         [str(i+1), task, ttype.capitalize(),
          f"{get_horizon(task):,}" if get_horizon(task) else "—",
          f"{get_horizon(task)//20} s" if get_horizon(task) else "—",
-         (full_instruction(task) or "")[:90]]
-        for i, (task, ttype, _) in enumerate(all_10)
+         full_instruction(task) or "—"]
+        for i, (task, ttype) in enumerate(all_10_pure)
     ],
     Inches(0.5), top, Inches(12.3), Inches(5.8),
     col_widths=[Inches(0.35), Inches(2.2), Inches(1.1), Inches(0.9),
@@ -871,56 +930,71 @@ simple_table(sl,
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SLIDE 14 — Navigation Task Examples
+# SLIDE 14 — Navigation Task Examples (short-horizon)
 # ═══════════════════════════════════════════════════════════════════════════════
 sl = slide()
-top = slide_heading(sl, "Navigation Task Examples",
-                    subtitle="4 tasks requiring mobile-base navigation between distant kitchen fixtures")
+top = slide_heading(sl, "Navigation Task Examples — Short & Medium Horizon",
+                    subtitle="Confirmed navigation: max base displacement > 0.5 m in demo data")
 
+nav_short = ["NavigateKitchen", "ServeTea", "PlaceDishesBySink", "HotDogSetup"]
 nav_items = []
-for task, subdir in [
-    ("NavigateKitchen",  "examples_navigation/atomic"),
-    ("ServeTea",         "examples_navigation/composite"),
-    ("PlaceDishesBySink","examples_navigation/composite"),
-    ("HotDogSetup",      "examples_navigation/composite"),
-]:
-    cs_dir = OUTPUT / subdir
-    for d in cs_dir.iterdir():
-        if d.name.startswith(task + "__"):
-            cs = d / "contact_sheet.png"
-            if cs.exists():
-                _, instr = parse_folder(d.name)
-                nav_items.append((cs, task, instr, get_horizon(task)))
-            break
+for task in nav_short:
+    cs = find_contact_sheet_any(task)
+    if cs:
+        nav_items.append((cs, task, "", get_horizon(task)))
 
 task_grid(sl, nav_items, top, cols=2, img_w_in=6.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SLIDE 15 — 10 Longest Tasks (visual)
+# SLIDE 14b — Navigation Task Examples (long-horizon)
 # ═══════════════════════════════════════════════════════════════════════════════
 sl = slide()
-top = slide_heading(sl, "10 Longest Tasks — Visual Examples",
-                    subtitle="All composite tasks, horizon 3,300–4,800 steps (165–240 s)")
+top = slide_heading(sl, "Navigation Task Examples — Long Horizon",
+                    subtitle="All confirmed by measured base displacement > 0.5 m · horizon 2,900–4,800 steps")
 
-longest_tasks = [
-    "DivideBuffetTrays", "RecycleSodaCans", "PrepareDrinkStation", "SetBowlsForSoup",
-]
+nav_long = ["SearingMeat", "ReturnWashingSupplies", "BeverageSorting", "ArrangeUtensilsByType"]
+nav_long_items = []
+for task in nav_long:
+    cs = find_contact_sheet_any(task)
+    if cs:
+        nav_long_items.append((cs, task, "", get_horizon(task)))
+
+task_grid(sl, nav_long_items, top, cols=2, img_w_in=6.0)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 14c — Navigation Task Examples (very long horizon)
+# ═══════════════════════════════════════════════════════════════════════════════
+sl = slide()
+top = slide_heading(sl, "Navigation Task Examples — Very Long Horizon",
+                    subtitle="Large-scale cross-kitchen tasks · horizon 3,300–4,800 steps · base displacement 3–7 m")
+
+nav_vlong = ["RecycleSodaCans", "DivideBuffetTrays", "SetBowlsForSoup", "PackFoodByTemp",
+             "PrepareCocktailStation", "PrepareDrinkStation"]
+nav_vlong_items = []
+for task in nav_vlong:
+    cs = find_contact_sheet_any(task)
+    if cs:
+        nav_vlong_items.append((cs, task, "", get_horizon(task)))
+
+task_grid(sl, nav_vlong_items, top, cols=2, img_w_in=6.0)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 15 — 10 Longest Pure Manipulation Tasks (visual examples)
+# ═══════════════════════════════════════════════════════════════════════════════
+sl = slide()
+top = slide_heading(sl, "10 Longest Pure Manipulation Tasks — Visual Examples",
+                    subtitle="SpicyMarinade & ClearSink contact sheets · all 10 tasks confirmed zero base movement (< 0.01 m)")
+
+# Show the two tasks that have rendered contact sheets
+longest_pure_visual = ["SpicyMarinade", "ClearSink"]
 items = []
-for task in longest_tasks:
-    for subdir in ["examples_pure_manipulation/composite", "longest/composite"]:
-        cs_dir = OUTPUT / subdir
-        if not cs_dir.exists():
-            continue
-        for d in cs_dir.iterdir():
-            if d.name.startswith(task + "__"):
-                cs = d / "contact_sheet.png"
-                if cs.exists():
-                    _, instr = parse_folder(d.name)
-                    items.append((cs, task, instr, get_horizon(task)))
-                break
-        if any(t == task for t, _, _, _ in items):
-            break
+for task in longest_pure_visual:
+    cs = find_contact_sheet_any(task)
+    if cs:
+        items.append((cs, task, "", get_horizon(task)))
 
 task_grid(sl, items, top, cols=2, img_w_in=6.0)
 
@@ -934,7 +1008,7 @@ top = slide_heading(sl, "Summary")
 summary_rows = [
     ("Scale",             "365 tasks (65 atomic + 300 composite) · 60 categories · 2,500+ scenes · 2,290+ hours"),
     ("Task Duration",     "10–240 s per episode (avg 52 s) — up to 4,800 control steps"),
-    ("Navigation",        "4 tasks require mobile-base navigation; 313/317 (98.7%) are pure manipulation"),
+    ("Navigation",        "≥ 14 tasks require mobile-base navigation (measured via base displacement > 0.5 m); ≥ 351/365 (≥ 96.2%) are pure manipulation"),
     ("Data",              "675 hrs human + 1,615 hrs MimicGen synthetic = 2,290+ total hours"),
     ("Benchmarking",      "3 protocols: Multi-Task Learning · Foundation Model Learning · Lifelong Learning"),
     ("Best SOTA result",  "GR00T N1.5: 43% atomic-seen, 9.6% composite-seen, 4.4% composite-unseen"),
@@ -955,6 +1029,87 @@ for i, (label, body) in enumerate(summary_rows):
 tb(sl, "robocasa.ai  ·  arxiv:2603.04356  ·  ICLR 2026",
    Inches(0.5), Inches(7.1), Inches(12.3), Inches(0.3),
    size=11, color=MGRAY, align=PP_ALIGN.CENTER, italic=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GALLERY SLIDES — All Rendered Output Examples
+# ═══════════════════════════════════════════════════════════════════════════════
+# Confirmed pure manipulation tasks (max base displacement < 0.01 m)
+PURE_TASKS = {
+    "TurnOnToaster", "TurnOnStove", "PickPlaceCounterToStove",
+    "PickPlaceCounterToCabinet", "OpenCabinet",
+    "WashLettuce", "LoadDishwasher", "PrepareCoffee", "SpicyMarinade", "ClearSink",
+    "MicrowaveThawing", "CerealAndBowl", "SweetSavoryToastSetup",
+    "OrganizeCleaningSupplies", "ToastBaguette", "PrepareToast",
+    "RestockBowls", "MakeFruitBowl",
+}
+# Confirmed navigation tasks (base displacement > 0.5 m)
+NAV_TASKS = {
+    "NavigateKitchen", "ServeTea", "PlaceDishesBySink", "HotDogSetup",
+    "SearingMeat", "ReturnWashingSupplies", "BeverageSorting",
+    "ArrangeUtensilsByType", "DivideBuffetTrays", "RecycleSodaCans",
+    "PackFoodByTemp", "PrepareDrinkStation", "SetBowlsForSoup", "PrepareCocktailStation",
+}
+
+
+def collect_all_contacts(filter_set=None):
+    """Collect unique contact sheets across all output dirs. Deduplicates by task name."""
+    all_dirs = [
+        OUTPUT / "examples_pure_manipulation" / "atomic",
+        OUTPUT / "examples_pure_manipulation" / "composite",
+        OUTPUT / "examples_navigation" / "atomic",
+        OUTPUT / "examples_navigation" / "composite",
+        OUTPUT / "longest" / "atomic",
+        OUTPUT / "longest" / "composite",
+    ]
+    seen, items = set(), []
+    for d in all_dirs:
+        if not d.exists():
+            continue
+        for folder in sorted(d.iterdir()):
+            cs = folder / "contact_sheet.png"
+            if not cs.exists():
+                continue
+            task_name = folder.name.split("__")[0]
+            if task_name in seen:
+                continue
+            if filter_set is not None and task_name not in filter_set:
+                continue
+            seen.add(task_name)
+            instr = full_instruction(task_name) or ""
+            items.append((cs, task_name, instr, get_horizon(task_name)))
+    return items
+
+
+def gallery_slides(title, items, cols=2, img_w_in=6.0):
+    """Paginate items across gallery slides, 4 per slide (2×2)."""
+    per_page = cols * 2
+    total_pages = max(1, (len(items) + per_page - 1) // per_page)
+    for page in range(total_pages):
+        chunk = items[page * per_page:(page + 1) * per_page]
+        if not chunk:
+            continue
+        sl = slide()
+        pg_sfx = f"  (Part {page+1} of {total_pages})" if total_pages > 1 else ""
+        top = slide_heading(sl, title + pg_sfx)
+        task_grid(sl, chunk, top, cols=cols, img_w_in=img_w_in)
+
+
+# ── Gallery: Pure Manipulation (atomic) ──────────────────────────────────────
+atomic_pure = collect_all_contacts(
+    filter_set={"TurnOnToaster","TurnOnStove","PickPlaceCounterToStove",
+                "PickPlaceCounterToCabinet","OpenCabinet"})
+gallery_slides("Gallery — Pure Manipulation: Atomic Tasks", atomic_pure, cols=2)
+
+# ── Gallery: Pure Manipulation (composite) ──────────────────────────────────
+comp_pure = collect_all_contacts(
+    filter_set=PURE_TASKS - {"TurnOnToaster","TurnOnStove","PickPlaceCounterToStove",
+                              "PickPlaceCounterToCabinet","OpenCabinet"})
+gallery_slides("Gallery — Pure Manipulation: Composite Tasks", comp_pure, cols=2)
+
+# ── Gallery: Navigation Tasks ────────────────────────────────────────────────
+nav_all = collect_all_contacts(filter_set=NAV_TASKS)
+gallery_slides("Gallery — Navigation Tasks", nav_all, cols=2)
 
 
 # ── save ──────────────────────────────────────────────────────────────────────

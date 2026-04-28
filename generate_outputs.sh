@@ -22,9 +22,10 @@ cd "$SCRIPT_DIR"
 #
 # Navigation classification is data-driven: we measure the robot's base position
 # displacement from episode_000000.parquet (observation.state[0:2] = base x,y).
-# Tasks with max displacement from start > 0.5 m require navigation.
+# Tasks with max displacement from start > 0.5 m are classified as navigation.
+# The LONGEST_PURE_MANIP list uses a stricter threshold of < 0.01 m (no movement at all).
 #
-# Measured max displacements for tasks in this script:
+# Measured max displacements for tasks in this script (observation.state[0:2], episode 0):
 #   TurnOnToaster           ~0.00 m   pure
 #   TurnOnStove              0.22 m   pure
 #   PickPlaceCounterToStove ~0.00 m   pure
@@ -33,8 +34,16 @@ cd "$SCRIPT_DIR"
 #   WashLettuce             ~0.00 m   pure
 #   LoadDishwasher          ~0.00 m   pure
 #   PrepareCoffee           ~0.00 m   pure
-#   SpicyMarinade           ~0.00 m   pure
-#   ClearSink               ~0.00 m   pure  (base_mode active but no displacement)
+#   SpicyMarinade           0.0002 m  pure
+#   ClearSink               0.0002 m  pure
+#   MicrowaveThawing        0.0002 m  pure
+#   CerealAndBowl           0.0013 m  pure
+#   SweetSavoryToastSetup   0.0009 m  pure
+#   OrganizeCleaningSupplies 0.0009 m pure
+#   ToastBaguette           0.0009 m  pure
+#   PrepareToast            0.0002 m  pure
+#   RestockBowls            0.0002 m  pure
+#   MakeFruitBowl           0.0006 m  pure
 #   SearingMeat              1.02 m   navigation
 #   ReturnWashingSupplies    1.49 m   navigation
 #   PlaceDishesBySink        1.21 m   navigation
@@ -63,13 +72,17 @@ NAV_COMPOSITE="ServeTea PlaceDishesBySink HotDogSetup \
   DivideBuffetTrays RecycleSodaCans PackFoodByTemp \
   PrepareDrinkStation SetBowlsForSoup PrepareCocktailStation"
 
-# 10 longest pure-manipulation composite tasks (all fixtures adjacent via ref=,
-# max base displacement <= 0.5 m in demo data):
-#   SpicyMarinade(3600), ClearSink(3300), CleanBoard(3200), MicrowaveThawing(3100),
-#   CerealAndBowl(2900), HeatMultipleWater(2800), WaffleReheat(2700),
-#   SweetSavoryToastSetup(2700), OrganizeCleaningSupplies(2700), PackIdenticalLunches(2600)
-LONGEST_PURE_MANIP="SpicyMarinade ClearSink CleanBoard MicrowaveThawing CerealAndBowl \
-  HeatMultipleWater WaffleReheat SweetSavoryToastSetup OrganizeCleaningSupplies PackIdenticalLunches"
+# 10 longest pure-manipulation composite tasks, data-driven: max base displacement < 0.01 m
+# (no robot base movement whatsoever in demo episode 0):
+#   SpicyMarinade(3600,0.0002m), ClearSink(3300,0.0002m), MicrowaveThawing(3100,0.0002m),
+#   CerealAndBowl(2900,0.0013m), SweetSavoryToastSetup(2700,0.0009m),
+#   OrganizeCleaningSupplies(2700,0.0009m), ToastBaguette(2600,0.0009m),
+#   PrepareToast(2500,0.0002m), RestockBowls(2400,0.0002m), MakeFruitBowl(2300,0.0006m)
+# Excluded (move > 0.5 m): CleanBoard(2.57m), HeatMultipleWater(0.77m), PackIdenticalLunches(2.73m)
+# WaffleReheat(2700) has no pretrain dataset available.
+LONGEST_PURE_MANIP="SpicyMarinade ClearSink MicrowaveThawing CerealAndBowl \
+  SweetSavoryToastSetup OrganizeCleaningSupplies ToastBaguette \
+  PrepareToast RestockBowls MakeFruitBowl"
 
 ALL_TASKS="$PURE_MANIP_ATOMIC $PURE_MANIP_COMPOSITE \
            $NAV_ATOMIC $NAV_COMPOSITE \
