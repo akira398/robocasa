@@ -7,6 +7,12 @@
 #
 # Or without activating first:
 #   conda run -n robocasa bash generate_outputs.sh
+#
+# Navigation classification:
+#   Pure manipulation  — robot stays in the main kitchen zone (no FixtureType.DINING_COUNTER)
+#   Cross-zone tasks   — robot must traverse to a separate dining-counter zone
+#                        (DINING_COUNTER_EXCLUDED_LAYOUTS set in task class)
+#   Explicit nav tasks — NavigateKitchen + tasks whose instruction explicitly says "navigate"
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,19 +20,28 @@ cd "$SCRIPT_DIR"
 
 # ── task lists ────────────────────────────────────────────────────────────────
 
+# Truly pure manipulation: all fixtures in the main kitchen zone
 PURE_MANIP_ATOMIC="TurnOnToaster TurnOnStove PickPlaceCounterToStove PickPlaceCounterToCabinet OpenCabinet"
 
-PURE_MANIP_COMPOSITE="WashLettuce LoadDishwasher PrepareCoffee SearingMeat DivideBuffetTrays \
-  BeverageSorting RecycleSodaCans PackFoodByTemp PrepareDrinkStation SetBowlsForSoup SpicyMarinade"
+PURE_MANIP_COMPOSITE="WashLettuce LoadDishwasher PrepareCoffee SearingMeat \
+  BeverageSorting SpicyMarinade ArrangeUtensilsByType ReturnWashingSupplies ClearSink"
 
-NAV_ATOMIC="NavigateKitchen"
+# Explicit navigation: mobile-base traversal is stated in the task description
+NAV_EXPLICIT_ATOMIC="NavigateKitchen"
+NAV_EXPLICIT_COMPOSITE="ServeTea PlaceDishesBySink HotDogSetup"
 
-NAV_COMPOSITE="ServeTea PlaceDishesBySink HotDogSetup"
+# Cross-zone tasks: require delivering to a dining counter in a separate kitchen zone
+# (task class sets EXCLUDE_LAYOUTS = Kitchen.DINING_COUNTER_EXCLUDED_LAYOUTS)
+NAV_CROSS_ZONE_COMPOSITE="DivideBuffetTrays RecycleSodaCans PackFoodByTemp \
+  PrepareDrinkStation SetBowlsForSoup PrepareCocktailStation"
 
+# 10 longest tasks (by max horizon); several require cross-zone traversal
 LONGEST_COMPOSITE="DivideBuffetTrays RecycleSodaCans PrepareDrinkStation SetBowlsForSoup SpicyMarinade \
   BeverageSorting PrepareCocktailStation ArrangeUtensilsByType ReturnWashingSupplies ClearSink"
 
-ALL_TASKS="$PURE_MANIP_ATOMIC $PURE_MANIP_COMPOSITE $NAV_ATOMIC $NAV_COMPOSITE $LONGEST_COMPOSITE"
+ALL_TASKS="$PURE_MANIP_ATOMIC $PURE_MANIP_COMPOSITE \
+           $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE \
+           $NAV_CROSS_ZONE_COMPOSITE $LONGEST_COMPOSITE"
 
 # deduplicate
 ALL_TASKS=$(echo "$ALL_TASKS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
@@ -45,6 +60,7 @@ echo "y" | python -m robocasa.scripts.download_datasets \
 echo ""
 echo "================================================================"
 echo " Step 2: output/examples_pure_manipulation  (images + videos)"
+echo " Tasks: atomic + composite with no cross-zone traversal"
 echo "================================================================"
 
 python render_task_images.py \
@@ -62,15 +78,16 @@ python render_task_videos.py \
 echo ""
 echo "================================================================"
 echo " Step 3: output/examples_navigation  (images + videos)"
+echo " Includes: explicit nav tasks + cross-zone dining-counter tasks"
 echo "================================================================"
 
 python render_task_images.py \
-  --tasks $NAV_ATOMIC $NAV_COMPOSITE \
+  --tasks $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
   --frames_per_task 4 --contact_sheet \
   --output_dir output/examples_navigation
 
 python render_task_videos.py \
-  --tasks $NAV_ATOMIC $NAV_COMPOSITE \
+  --tasks $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
   --video_skip 3 \
   --output_dir output/examples_navigation
 
@@ -79,6 +96,7 @@ python render_task_videos.py \
 echo ""
 echo "================================================================"
 echo " Step 4: output/longest  (images + videos)"
+echo " 10 longest tasks by horizon (mix of pure manip + cross-zone)"
 echo "================================================================"
 
 python render_task_images.py \
@@ -96,7 +114,7 @@ python render_task_videos.py \
 echo ""
 echo "================================================================"
 echo " All done. Output folders:"
-echo "   output/examples_pure_manipulation/"
-echo "   output/examples_navigation/"
-echo "   output/longest/"
+echo "   output/examples_pure_manipulation/  — truly pure manipulation"
+echo "   output/examples_navigation/         — explicit nav + cross-zone"
+echo "   output/longest/                     — 10 longest tasks"
 echo "================================================================"
