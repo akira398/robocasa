@@ -1112,6 +1112,201 @@ nav_all = collect_all_contacts(filter_set=NAV_TASKS)
 gallery_slides("Gallery — Navigation Tasks", nav_all, cols=2)
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# APPENDIX — All 365 Task Names Organised by Category
+# ═══════════════════════════════════════════════════════════════════════════════
+
+import re as _re
+
+_MD_PATH = Path("/Users/hossein/Documents/code/robocasa/ROBOCASA_BENCHMARK.md")
+
+def _parse_categories():
+    """Parse all 60 categories + tasks from ROBOCASA_BENCHMARK.md section 13."""
+    text = _MD_PATH.read_text()
+    m = _re.search(r'## 13\. Complete Composite Task List.*?(?=\n## 14\.)', text, _re.DOTALL)
+    if not m:
+        return []
+    section = m.group(0)
+    cat_hdrs = list(_re.finditer(r'### (\d+)\. (.+?) \((\d+) tasks?\)', section))
+    cats = []
+    for i, hdr in enumerate(cat_hdrs):
+        start = hdr.end()
+        end = cat_hdrs[i+1].start() if i+1 < len(cat_hdrs) else len(section)
+        chunk = section[start:end]
+        tasks = []
+        for line in chunk.splitlines():
+            parts = [p.strip() for p in line.split('|')]
+            if len(parts) < 4:
+                continue
+            name = parts[1].replace('**', '').replace('*', '').strip()
+            if (not name or name in ('Task', '------', '---')
+                    or not name[0].isupper() or ' ' in name[:2]):
+                continue
+            dur  = parts[3].replace('**', '').strip() if len(parts) > 3 else ''
+            tgt  = parts[5].strip() if len(parts) > 5 else ''
+            tasks.append((name, dur, tgt))
+        if tasks:
+            cats.append((int(hdr.group(1)), hdr.group(2), tasks))
+    return cats
+
+_CATEGORIES = _parse_categories()
+
+# ── Appendix layout constants ─────────────────────────────────────────────────
+_COLS       = 3
+_APP_MARGIN = Inches(0.36)
+_APP_GAP    = Inches(0.16)
+_APP_COL_W  = (Inches(13.33) - 2 * _APP_MARGIN - (_COLS - 1) * _APP_GAP) / _COLS
+_TASK_H     = Inches(0.193)
+_CAT_HDR_H  = Inches(0.280)
+_CAT_GAP    = Inches(0.10)
+_MAX_COL_H  = Inches(6.22)
+
+# Palette for category headers cycling through 3 accent colours
+_CAT_FILLS  = [LBLUE_F, RGBColor(0xED, 0xF7, 0xED), RGBColor(0xFF, 0xF8, 0xE7)]
+_CAT_LINES  = [LBLUE,   GREEN,                       ORANGE]
+_CAT_TEXTS  = [BLUE,    GREEN,                       ORANGE]
+
+
+def _col_x(ci):
+    return _APP_MARGIN + ci * (_APP_COL_W + _APP_GAP)
+
+
+def _draw_category(sl, col_i, y, cat_num, cat_name, tasks, page_cat_idx):
+    """Draw one category block (header + task rows) at the given column / y."""
+    cx = _col_x(col_i)
+    ci = page_cat_idx % 3            # cycles colour every 3 categories on the page
+    fill  = _CAT_FILLS[ci]
+    lc    = _CAT_LINES[ci]
+    tc    = _CAT_TEXTS[ci]
+
+    # Header
+    rect(sl, cx, y, _APP_COL_W, _CAT_HDR_H, fill=fill, line_color=lc, line_pt=0.5)
+    tb(sl, f"{cat_num}. {cat_name}",
+       cx + Inches(0.06), y + Inches(0.025),
+       _APP_COL_W - Inches(0.08), _CAT_HDR_H - Inches(0.03),
+       size=8.5, bold=True, color=tc)
+    y += _CAT_HDR_H
+
+    # Task rows
+    for row_i, (name, dur, tgt) in enumerate(tasks):
+        bg = RGBColor(0xF5, 0xF5, 0xF5) if row_i % 2 == 0 else WHITE
+        rect(sl, cx, y, _APP_COL_W, _TASK_H, fill=bg)
+        star = " ★" if tgt else ""
+        tb(sl, f"  {name}{star}",
+           cx + Inches(0.04), y + Inches(0.010),
+           _APP_COL_W * 0.74, _TASK_H - Inches(0.010),
+           size=7.5, color=ORANGE if tgt else DGRAY, bold=bool(tgt))
+        if dur and dur != '—':
+            tb(sl, dur, cx + _APP_COL_W * 0.76, y + Inches(0.010),
+               _APP_COL_W * 0.22, _TASK_H - Inches(0.010),
+               size=7, color=MGRAY, align=PP_ALIGN.RIGHT)
+        y += _TASK_H
+
+    return y   # return updated y for next category in this column
+
+
+# ── Appendix slide A1: All 65 Atomic Tasks ───────────────────────────────────
+from robocasa.utils.dataset_registry import ATOMIC_TASK_DATASETS as _ATOMIC
+
+sl = slide()
+top = slide_heading(sl, "Appendix A — All 65 Atomic Tasks",
+                    subtitle="★ = included in target evaluation split (18 tasks) · duration shown as seconds @ 20 Hz")
+
+_ATOMIC_TARGET = {
+    "CloseBlenderLid","CloseFridge","CloseToasterOvenDoor","CoffeeSetupMug",
+    "NavigateKitchen","OpenCabinet","OpenDrawer","OpenStandMixerHead",
+    "PickPlaceCounterToCabinet","PickPlaceCounterToStove","PickPlaceDrawerToCounter",
+    "PickPlaceSinkToCounter","PickPlaceToasterToCounter","SlideDishwasherRack",
+    "TurnOffStove","TurnOnElectricKettle","TurnOnMicrowave","TurnOnSinkFaucet",
+}
+_atomic_sorted = sorted(_ATOMIC.items())
+_per_col = (_len := len(_atomic_sorted) + _COLS - 1) // _COLS   # ceil(65/3)=22
+_per_col = 22   # fix to 22 so col 3 has 21
+
+for ci in range(_COLS):
+    cx = _col_x(ci)
+    rect(sl, cx, top, _APP_COL_W, _CAT_HDR_H, fill=LBLUE_F, line_color=LBLUE, line_pt=0.5)
+    lo = ci * _per_col + 1
+    hi = min((ci + 1) * _per_col, 65)
+    tb(sl, f"Atomic tasks  {lo}–{hi}",
+       cx + Inches(0.06), top + Inches(0.025),
+       _APP_COL_W - Inches(0.08), _CAT_HDR_H - Inches(0.03),
+       size=8.5, bold=True, color=BLUE)
+
+for idx, (task, info) in enumerate(_atomic_sorted):
+    ci = idx // _per_col
+    ri = idx % _per_col
+    if ci >= _COLS:
+        break
+    cx = _col_x(ci)
+    cy = top + _CAT_HDR_H + ri * _TASK_H
+    bg = RGBColor(0xF5, 0xF5, 0xF5) if ri % 2 == 0 else WHITE
+    rect(sl, cx, cy, _APP_COL_W, _TASK_H, fill=bg)
+    h = info.get('horizon', 0) if isinstance(info, dict) else 0
+    star = " ★" if task in _ATOMIC_TARGET else ""
+    tb(sl, f"  {task}{star}",
+       cx + Inches(0.04), cy + Inches(0.010),
+       _APP_COL_W * 0.78, _TASK_H - Inches(0.010),
+       size=7.5, color=ORANGE if star else DGRAY, bold=bool(star))
+    if h:
+        tb(sl, f"{h//20}s",
+           cx + _APP_COL_W * 0.80, cy + Inches(0.010),
+           _APP_COL_W * 0.18, _TASK_H - Inches(0.010),
+           size=7, color=MGRAY, align=PP_ALIGN.RIGHT)
+
+tb(sl, "★ = target evaluation split",
+   Inches(0.5), top + _CAT_HDR_H + 22 * _TASK_H + Inches(0.05),
+   Inches(5), Inches(0.25), size=8, color=MGRAY, italic=True)
+
+
+# ── Appendix slides B1–BN: 60 Composite Categories ───────────────────────────
+_cur_sl   = None
+_cur_top  = None
+_col_idx  = 0
+_col_y    = Inches(0)
+_page_num = 0
+_page_cat = 0   # category colour-cycle counter per page
+
+
+def _new_cat_slide():
+    global _cur_sl, _cur_top, _col_idx, _col_y, _page_num, _page_cat
+    _page_num += 1
+    _cur_sl  = slide()
+    _cur_top = slide_heading(
+        _cur_sl,
+        f"Appendix B — Composite Tasks by Category  (Part {_page_num})",
+        subtitle="★ = target evaluation split  ·  duration shown at 20 Hz  ·  300 tasks across 60 activity categories")
+    _col_idx = 0
+    _col_y   = _cur_top
+    _page_cat = 0
+
+
+for cat_num, cat_name, tasks in _CATEGORIES:
+    cat_h = _CAT_HDR_H + len(tasks) * _TASK_H + _CAT_GAP
+
+    if _cur_sl is None:
+        _new_cat_slide()
+
+    # Does this category fit in the current column?
+    if _col_y + cat_h > _cur_top + _MAX_COL_H:
+        _col_idx += 1
+        _col_y = _cur_top
+        _page_cat += 1
+        if _col_idx >= _COLS:
+            _new_cat_slide()
+
+    _draw_category(_cur_sl, _col_idx, _col_y, cat_num, cat_name, tasks, _page_cat)
+    _col_y   += cat_h
+    _page_cat += 1
+
+
+# ── Legend note on last category slide ───────────────────────────────────────
+if _cur_sl:
+    tb(_cur_sl, "★ = included in composite-seen or composite-unseen target evaluation split",
+       Inches(0.4), Inches(7.15), Inches(12.5), Inches(0.28),
+       size=8, color=MGRAY, italic=True)
+
+
 # ── save ──────────────────────────────────────────────────────────────────────
 out = "robocasa_slides.pptx"
 prs.save(out)
