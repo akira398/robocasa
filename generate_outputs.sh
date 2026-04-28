@@ -20,15 +20,22 @@ cd "$SCRIPT_DIR"
 
 # ── task lists ────────────────────────────────────────────────────────────────
 
-# Truly pure manipulation: all fixtures in the main kitchen zone
+# Truly pure manipulation: all destination fixtures are adjacent (linked via ref=)
+# so the robot arm can complete the task without moving the base.
 PURE_MANIP_ATOMIC="TurnOnToaster TurnOnStove PickPlaceCounterToStove PickPlaceCounterToCabinet OpenCabinet"
 
 PURE_MANIP_COMPOSITE="WashLettuce LoadDishwasher PrepareCoffee SearingMeat \
-  BeverageSorting SpicyMarinade ArrangeUtensilsByType ReturnWashingSupplies ClearSink"
+  SpicyMarinade ReturnWashingSupplies ClearSink"
 
-# Explicit navigation: mobile-base traversal is stated in the task description
+# Explicit navigation: mobile-base traversal stated in the task description
 NAV_EXPLICIT_ATOMIC="NavigateKitchen"
 NAV_EXPLICIT_COMPOSITE="ServeTea PlaceDishesBySink HotDogSetup"
+
+# Multi-fixture navigation: destination fixtures are NOT adjacent (no ref= link),
+# requiring base repositioning across the kitchen.
+# e.g. BeverageSorting: two cabinets up to 2.5 m apart
+#      ArrangeUtensilsByType: cabinet + drawer + counter, all independently placed
+NAV_MULTI_FIXTURE_COMPOSITE="BeverageSorting ArrangeUtensilsByType"
 
 # Cross-zone tasks: require delivering to a dining counter in a separate kitchen zone
 # (task class sets EXCLUDE_LAYOUTS = Kitchen.DINING_COUNTER_EXCLUDED_LAYOUTS)
@@ -41,7 +48,8 @@ LONGEST_COMPOSITE="DivideBuffetTrays RecycleSodaCans PrepareDrinkStation SetBowl
 
 ALL_TASKS="$PURE_MANIP_ATOMIC $PURE_MANIP_COMPOSITE \
            $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE \
-           $NAV_CROSS_ZONE_COMPOSITE $LONGEST_COMPOSITE"
+           $NAV_MULTI_FIXTURE_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
+           $LONGEST_COMPOSITE"
 
 # deduplicate
 ALL_TASKS=$(echo "$ALL_TASKS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
@@ -78,16 +86,18 @@ python render_task_videos.py \
 echo ""
 echo "================================================================"
 echo " Step 3: output/examples_navigation  (images + videos)"
-echo " Includes: explicit nav tasks + cross-zone dining-counter tasks"
+echo " Includes: explicit nav + multi-fixture + cross-zone dining-counter tasks"
 echo "================================================================"
 
 python render_task_images.py \
-  --tasks $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
+  --tasks $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE \
+          $NAV_MULTI_FIXTURE_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
   --frames_per_task 4 --contact_sheet \
   --output_dir output/examples_navigation
 
 python render_task_videos.py \
-  --tasks $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
+  --tasks $NAV_EXPLICIT_ATOMIC $NAV_EXPLICIT_COMPOSITE \
+          $NAV_MULTI_FIXTURE_COMPOSITE $NAV_CROSS_ZONE_COMPOSITE \
   --video_skip 3 \
   --output_dir output/examples_navigation
 
@@ -114,7 +124,7 @@ python render_task_videos.py \
 echo ""
 echo "================================================================"
 echo " All done. Output folders:"
-echo "   output/examples_pure_manipulation/  — truly pure manipulation"
-echo "   output/examples_navigation/         — explicit nav + cross-zone"
+echo "   output/examples_pure_manipulation/  — truly pure manipulation (adjacent fixtures only)"
+echo "   output/examples_navigation/         — explicit nav + multi-fixture + cross-zone"
 echo "   output/longest/                     — 10 longest tasks"
 echo "================================================================"
